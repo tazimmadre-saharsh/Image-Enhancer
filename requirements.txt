@@ -1,0 +1,27 @@
+# Core image processing dependencies
+opencv-python==4.9.0.80
+Pillow>=10.0.0
+numpy>=1.24.0,<2.0.0
+
+# Progress bars for CLI
+tqdm>=4.65.0
+
+# HTTP requests for image fetching
+requests>=2.31.0
+
+# Font handling
+fonttools>=4.40.0
+
+# Web framework dependencies (for API integration)
+fastapi>=0.104.0
+python-multipart>=0.0.6
+uvicorn[standard]>=0.24.0
+
+# Development dependencies
+pytest>=7.4.0
+pytest-cov>=4.1.0
+black>=23.0.0
+flake8>=6.0.0
+isort>=5.12.0
+mypy>=1.7.0
+types-Pillow>=10.0.0

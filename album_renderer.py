@@ -1,0 +1,848 @@
+#!/usr/bin/env python3
+"""
+Album Renderer - Python equivalent of the TypeScript image worker
+
+Renders photobook pages with enhanced images instead of original images.
+Integrates with the enhancement pipeline to use high-quality processed images.
+"""
+
+import json
+import math
+import os
+import io
+import tempfile
+from pathlib import Path
+from typing import Dict, Any, List, Optional, Tuple, Union
+from dataclasses import dataclass
+import requests
+from PIL import Image, ImageDraw, ImageFont, ImageOps, ImageFilter
+import cv2
+import numpy as np
+
+from photobook_enhancer import PhotoBookEnhancer
+from enhancement_specs import EnhancementSpec
+from image_processor import ImageProcessor
+
+# =========================
+# CONSTANTS
+# =========================
+DESIGN_REF_WIDTH = 800
+DESIGN_REF_HEIGHT = 600
+DPI = 300  # Print quality DPI
+JPEG_QUALITY = 98  # Maximum quality JPEG for print (0-100)
+
+# Default layouts path
+LAYOUTS_PATH = Path(__file__).parent / "layouts.json"
+FONTS_DIR = Path(__file__).parent / "fonts"
+
+# =========================
+# FONT CONFIGURATION
+# =========================
+
+# Font family mapping
+FONT_FAMILY_MAP = {
+    # Google Fonts
+    '"Playfair Display"': "Playfair Display",
+    "Playfair Display": "Playfair Display",
+    '"Montserrat"': "Montserrat",
+    "Montserrat": "Montserrat",
+    '"Roboto"': "Roboto",
+    "Roboto": "Roboto",
+    '"Open Sans"': "Open Sans",
+    "Open Sans": "Open Sans",
+    '"Lato"': "Lato",
+    "Lato": "Lato",
+    '"Merriweather"': "Merriweather",
+    "Merriweather": "Merriweather",
+    '"Raleway"': "Raleway",
+    "Raleway": "Raleway",
+    '"Dancing Script"': "Dancing Script",
+    "Dancing Script": "Dancing Script",
+    '"Architects Daughter"': "Architects Daughter",
+    "Architects Daughter": "Architects Daughter",
+    '"Caveat"': "Caveat",
+    "Caveat": "Caveat",
+    '"Amatic SC"': "Amatic SC",
+    "Amatic SC": "Amatic SC",
+    # System fonts
+    "Arial": "Arial",
+    "Georgia": "Georgia",
+    '"Times New Roman"': "Times New Roman",
+    "Times New Roman": "Times New Roman",
+    "Verdana": "Verdana",
+    "Impact": "Impact",
+}
+
+# Font files configuration
+FONT_FILES = {
+    # Playfair Display
+    "PlayfairDisplay-Regular": {"family": "Playfair Display", "weight": "normal", "style": "normal"},
+    "PlayfairDisplay-Bold": {"family": "Playfair Display", "weight": "bold", "style": "normal"},
+    "PlayfairDisplay-Italic": {"family": "Playfair Display", "weight": "normal", "style": "italic"},
+    # Montserrat
+    "Montserrat-Regular": {"family": "Montserrat", "weight": "normal", "style": "normal"},
+    "Montserrat-Bold": {"family": "Montserrat", "weight": "bold", "style": "normal"},
+    # Add more fonts as needed...
+}
+
+# =========================
+# DATA STRUCTURES
+# =========================
+
+@dataclass
+class AlbumImage:
+    imageId: str
+    image: Optional[Dict[str, Any]] = None
+
+@dataclass
+class AlbumPage:
+    pageNumber: int
+    pageType: Optional[str] = None
+    isEditable: Optional[bool] = None
+    layoutId: Optional[str] = None
+    backgroundColor: Optional[str] = None
+    backgroundImageUrl: Optional[str] = None
+    backgroundImage: Optional[Dict[str, Any]] = None
+    backgroundImageId: Optional[str] = None
+    elements: Optional[List[Dict[str, Any]]] = None
+    textElements: Optional[List[Dict[str, Any]]] = None
+
+@dataclass
+class AlbumData:
+    pages: List[AlbumPage]
+    project_images: List[AlbumImage]
+
+@dataclass
+class LayoutZone:
+    id: str
+    position: Dict[str, float]  # {"x": float, "y": float}
+    size: Dict[str, float]      # {"width": float, "height": float}
+
+@dataclass
+class LayoutDef:
+    id: str
+    zones: List[LayoutZone]
+
+@dataclass
+class RenderedPage:
+    pageNumber: int
+    pageType: Optional[str]
+    buffer: bytes
+
+# =========================
+# HELPER FUNCTIONS
+# =========================
+
+def load_layouts_by_id(layouts_path: Optional[Path] = None) -> Dict[str, LayoutDef]:
+    """Load layouts from JSON file and return as dictionary keyed by ID."""
+    if layouts_path is None:
+        layouts_path = LAYOUTS_PATH
+    
+    with open(layouts_path, 'r') as f:
+        layouts_array = json.load(f)
+    
+    layouts_by_id = {}
+    for layout_data in layouts_array:
+        zones = [
+            LayoutZone(
+                id=zone["id"],
+                position=zone["position"],
+                size=zone["size"]
+            )
+            for zone in layout_data.get("zones", [])
+        ]
+        layout = LayoutDef(id=layout_data["id"], zones=zones)
+        layouts_by_id[layout.id] = layout
+    
+    return layouts_by_id
+
+def load_remote_image(url: str, timeout: int = 20) -> Image.Image:
+    """Load image from URL with EXIF orientation correction."""
+    if not url or not isinstance(url, str):
+        raise ValueError("Missing image url for remote load")
+
+    headers = {"User-Agent": "Mozilla/5.0 (compatible; AlbumRenderer/1.0)"}
+    response = requests.get(url, headers=headers, timeout=timeout)
+    response.raise_for_status()
+
+    img = Image.open(io.BytesIO(response.content))
+
+    # Apply EXIF orientation correction (browsers/Canvas do this automatically)
+    # This is needed because images may be stored in landscape with EXIF rotation data
+    try:
+        img = ImageOps.exif_transpose(img)
+    except (AttributeError, OSError, TypeError):
+        # No EXIF data or orientation info
+        pass
+
+    return img
+
+def pct_x(width: float, value: float) -> float:
+    """Convert percentage to pixel value for width."""
+    return (value / 100.0) * width
+
+def pct_y(height: float, value: float) -> float:
+    """Convert percentage to pixel value for height."""
+    return (value / 100.0) * height
+
+def get_fitted_rect(img_w: int, img_h: int, box_w: int, box_h: int, mode: str = "cover") -> Dict[str, float]:
+    """Calculate fitted rectangle for image in container."""
+    if mode == "fill":
+        return {"x": 0, "y": 0, "width": box_w, "height": box_h}
+    
+    img_ratio = img_w / img_h
+    box_ratio = box_w / box_h
+    
+    if mode == "cover":
+        scale = box_w / img_w if box_ratio > img_ratio else box_h / img_h
+    else:  # "contain" or "smart"
+        scale = box_h / img_h if box_ratio > img_ratio else box_w / img_w
+    
+    w = img_w * scale
+    h = img_h * scale
+    
+    return {
+        "x": (box_w - w) / 2,
+        "y": (box_h - h) / 2,
+        "width": w,
+        "height": h
+    }
+
+def resolve_font_family(css_font_family: str) -> str:
+    """Parse CSS font-family string and return best matching font."""
+    if not css_font_family:
+        return "Arial"
+    
+    fonts = [f.strip() for f in css_font_family.split(",")]
+    
+    for font in fonts:
+        clean_font = font.replace('"', '').replace("'", "").strip()
+        
+        # Check direct mapping
+        if font in FONT_FAMILY_MAP:
+            return FONT_FAMILY_MAP[font]
+        if clean_font in FONT_FAMILY_MAP:
+            return FONT_FAMILY_MAP[clean_font]
+        
+        # Skip generic families
+        if clean_font in ["sans-serif", "serif", "monospace", "cursive", "fantasy"]:
+            continue
+        
+        return clean_font
+    
+    return "Arial"
+
+def load_font(family: str, size: int, style: str = "normal", weight: str = "normal") -> ImageFont.FreeTypeFont:
+    """Load font with fallback to system fonts if not found."""
+    # List of font paths to try
+    font_attempts = []
+
+    # 1. Try fonts directory if it exists
+    if FONTS_DIR.exists():
+        # Try exact match with style/weight
+        for font_file in FONTS_DIR.glob("*.ttf"):
+            if family.lower().replace(" ", "").replace("-", "") in font_file.stem.lower().replace("-", ""):
+                font_attempts.append(str(font_file))
+                break
+
+    # 2. Try common system font locations
+    system_font_paths = [
+        f"/System/Library/Fonts/{family}.ttc",  # macOS
+        f"/System/Library/Fonts/Supplemental/{family}.ttf",  # macOS
+        f"/Library/Fonts/{family}.ttf",  # macOS user fonts
+        f"/usr/share/fonts/truetype/{family.lower()}/{family}.ttf",  # Linux
+        f"C:\\Windows\\Fonts\\{family}.ttf",  # Windows
+    ]
+    font_attempts.extend(system_font_paths)
+
+    # 3. Try generic font names as fallback
+    fallback_fonts = ["Arial", "Helvetica", "DejaVuSans", "FreeSans"]
+    for fb_font in fallback_fonts:
+        font_attempts.extend([
+            f"/System/Library/Fonts/{fb_font}.ttc",
+            f"/System/Library/Fonts/{fb_font}.ttf",
+            f"/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+        ])
+
+    # Try each font path
+    for font_path in font_attempts:
+        try:
+            return ImageFont.truetype(font_path, size)
+        except (OSError, IOError):
+            continue
+
+    # Last resort: return a default font at the requested size (better than tiny bitmap)
+    # Create a simple scalable default
+    try:
+        # Try to use PIL's default as TrueType if possible
+        return ImageFont.load_default()
+    except:
+        return ImageFont.load_default()
+
+def draw_text(
+    draw: ImageDraw.ImageDraw,
+    text_elem: Dict[str, Any],
+    page_w: int,
+    page_h: int,
+    override_x: Optional[float] = None,
+    override_y: Optional[float] = None
+):
+    """Draw text element on the image."""
+    content = text_elem.get("content", "")
+    if not content:
+        return
+
+    y = override_y if override_y is not None else pct_y(page_h, text_elem.get("position", {}).get("y", 0))
+
+    # Scale font size from design resolution to print resolution
+    scale_y = page_h / DESIGN_REF_HEIGHT
+    font_px = int((text_elem.get("fontSize", 12)) * scale_y)
+
+    print(f"[DEBUG] Text: '{content}', fontSize: {text_elem.get('fontSize', 12)}, scaled: {font_px}px, page_h: {page_h}, scale_y: {scale_y:.2f}")
+
+    # Resolve font family
+    css_font_family = text_elem.get("fontFamily", "Arial")
+    font_family = resolve_font_family(css_font_family)
+    font_style = text_elem.get("fontStyle", "normal")
+    font_weight = text_elem.get("fontWeight", "normal")
+
+    print(f"[DEBUG] Font family: '{css_font_family}' -> '{font_family}'")
+
+    # Load font
+    font = load_font(font_family, font_px, font_style, font_weight)
+
+    # Check text width and adjust if needed
+    try:
+        text_bbox = draw.textbbox((0, 0), content, font=font)
+        text_width = text_bbox[2] - text_bbox[0]
+    except:
+        # Fallback for older PIL versions
+        text_width = font.getsize(content)[0] if hasattr(font, 'getsize') else len(content) * font_px * 0.6
+
+    max_allowed_width = page_w * 0.8
+
+    if text_width > max_allowed_width:
+        scale_factor = max_allowed_width / text_width
+        font_px = int(font_px * scale_factor)
+        font = load_font(font_family, font_px, font_style, font_weight)
+        try:
+            text_bbox = draw.textbbox((0, 0), content, font=font)
+            text_width = text_bbox[2] - text_bbox[0]
+        except:
+            text_width = font.getsize(content)[0] if hasattr(font, 'getsize') else len(content) * font_px * 0.6
+
+    # Calculate centered X position
+    centered_x = (page_w - text_width) / 2
+    x = override_x if override_x is not None else centered_x
+
+    print(f"[DEBUG] Drawing text at ({x:.0f}, {y:.0f}), width: {text_width:.0f}px")
+
+    color = text_elem.get("color", "#000000")
+
+    # Draw text
+    draw.text((x, y), content, fill=color, font=font)
+
+# =========================
+# ENHANCED IMAGE INTEGRATION
+# =========================
+
+class EnhancedImageManager:
+    """Manages enhanced images and provides fallback to original images."""
+    
+    def __init__(self, enhanced_dir: Optional[Path] = None):
+        self.enhanced_dir = enhanced_dir
+        self.enhanced_images_cache: Dict[str, str] = {}
+        
+        if enhanced_dir and enhanced_dir.exists():
+            self._build_enhanced_cache()
+    
+    def _build_enhanced_cache(self):
+        """Build cache of enhanced image paths by imageId."""
+        if not self.enhanced_dir or not self.enhanced_dir.exists():
+            return
+        
+        for img_file in self.enhanced_dir.glob("*.jpg"):
+            # Enhanced images are named as: {imageId}_page{pageNo:02d}.jpg
+            if "_page" in img_file.stem:
+                image_id = img_file.stem.split("_page")[0]
+                self.enhanced_images_cache[image_id] = str(img_file)
+    
+    def get_image(self, image_id: str, original_url: Optional[str] = None) -> Image.Image:
+        """Get enhanced image if available, fallback to original."""
+        # Try enhanced image first
+        if image_id in self.enhanced_images_cache:
+            try:
+                enhanced_path = self.enhanced_images_cache[image_id]
+                img = Image.open(enhanced_path)
+                # Enhanced images are already processed and correctly oriented
+                # NO EXIF rotation needed
+                return img
+            except Exception as e:
+                print(f"Failed to load enhanced image for {image_id}: {e}")
+
+        # Fallback to original image with EXIF orientation correction
+        if original_url:
+            return load_remote_image(original_url)
+
+        raise ValueError(f"No image available for imageId: {image_id}")
+
+# =========================
+# RENDER PAGE
+# =========================
+
+async def render_page(
+    page: AlbumPage,
+    page_width: int,
+    page_height: int,
+    layouts_by_id: Dict[str, LayoutDef],
+    album: AlbumData,
+    enhanced_manager: Optional[EnhancedImageManager] = None
+) -> bytes:
+    """Render a single page to JPEG buffer."""
+    
+    # Create canvas
+    canvas = Image.new("RGB", (page_width, page_height), color=page.backgroundColor or "#ffffff")
+    
+    # 1) Background image
+    bg_url = None
+    if page.backgroundImageUrl:
+        bg_url = page.backgroundImageUrl
+    elif page.backgroundImage and page.backgroundImage.get("url"):
+        bg_url = page.backgroundImage["url"]
+    elif page.backgroundImage and page.backgroundImage.get("storagePath"):
+        bg_url = page.backgroundImage["storagePath"]
+    elif page.backgroundImageId or (page.backgroundImage and page.backgroundImage.get("imageId")):
+        bg_image_id = page.backgroundImageId or page.backgroundImage.get("imageId")
+        bg_image_obj = next((p for p in album.project_images if p.imageId == bg_image_id), None)
+        if bg_image_obj and bg_image_obj.image:
+            bg_url = bg_image_obj.image.get("url") or bg_image_obj.image.get("storagePath")
+    
+    if bg_url:
+        try:
+            if enhanced_manager:
+                bg_image_id = page.backgroundImageId or (page.backgroundImage and page.backgroundImage.get("imageId"))
+                bg_img = enhanced_manager.get_image(bg_image_id, bg_url) if bg_image_id else load_remote_image(bg_url)
+            else:
+                bg_img = load_remote_image(bg_url)
+            
+            # Apply background image with transforms (matching TypeScript lines 403-435)
+            bg_transform = page.backgroundImage.get("transform", {}) if page.backgroundImage else {}
+            fit_mode = bg_transform.get("fitMode", "cover")
+            rotation = bg_transform.get("rotation", 0)
+            flip_x = bg_transform.get("flipX", False)
+            flip_y = bg_transform.get("flipY", False)
+            scale = bg_transform.get("scale", 1.0)
+            offset_x = bg_transform.get("offsetX", 0)
+            offset_y = bg_transform.get("offsetY", 0)
+            opacity = bg_transform.get("opacity", 1.0)
+
+            # Calculate fitted dimensions
+            fitted_bg_base = get_fitted_rect(bg_img.width, bg_img.height, page_width, page_height, fit_mode)
+
+            # Apply scale
+            draw_bw = fitted_bg_base["width"] * scale
+            draw_bh = fitted_bg_base["height"] * scale
+            draw_bx = fitted_bg_base["x"] + offset_x
+            draw_by = fitted_bg_base["y"] + offset_y
+
+            # Resize background image
+            bg_resized = bg_img.resize((int(draw_bw), int(draw_bh)), Image.Resampling.LANCZOS)
+
+            # Apply sharpening after resize
+            bg_resized = bg_resized.filter(ImageFilter.UnsharpMask(radius=1.0, percent=120, threshold=3))
+
+            # Apply transforms (Canvas context style)
+            bg_transformed = bg_resized.convert("RGBA")
+
+            # Apply flips
+            if flip_x:
+                bg_transformed = bg_transformed.transpose(Image.FLIP_LEFT_RIGHT)
+            if flip_y:
+                bg_transformed = bg_transformed.transpose(Image.FLIP_TOP_BOTTOM)
+
+            # Apply rotation (Canvas rotates CLOCKWISE with positive angles)
+            if rotation != 0:
+                # Calculate center for rotation
+                bcx = draw_bx + draw_bw / 2
+                bcy = draw_by + draw_bh / 2
+
+                # Rotate (negate for PIL counterclockwise)
+                bg_transformed = bg_transformed.rotate(-rotation, expand=True, fillcolor=(0, 0, 0, 0))
+
+                # Recalculate position after rotation
+                draw_bx = bcx - bg_transformed.width / 2
+                draw_by = bcy - bg_transformed.height / 2
+
+            # Apply opacity
+            if opacity < 1.0:
+                alpha = int(255 * max(0, min(1, opacity)))
+                # Adjust alpha channel
+                alpha_channel = bg_transformed.split()[3]
+                alpha_channel = alpha_channel.point(lambda p: int(p * opacity))
+                bg_transformed.putalpha(alpha_channel)
+
+            # Composite onto canvas
+            canvas_rgba = canvas.convert("RGBA")
+            canvas_rgba.paste(bg_transformed, (int(draw_bx), int(draw_by)), bg_transformed)
+            canvas = canvas_rgba.convert("RGB")
+            
+        except Exception as e:
+            print(f"Failed to load background image: {e}")
+    
+    # 2) Layout zones with enhanced images
+    layout = layouts_by_id.get(page.layoutId) if page.layoutId else None
+    
+    if layout and layout.zones:
+        for zone in layout.zones:
+            if not page.elements:
+                continue
+                
+            elem = next((e for e in page.elements if e.get("zoneId") == zone.id), None)
+            if not elem or not elem.get("imageId"):
+                continue
+            
+            image_obj = next((p for p in album.project_images if p.imageId == elem["imageId"]), None)
+            if not image_obj or not image_obj.image:
+                continue
+            
+            original_url = image_obj.image.get("url") or image_obj.image.get("storagePath")
+            
+            try:
+                # Use enhanced image if available, fallback to original
+                if enhanced_manager:
+                    img = enhanced_manager.get_image(elem["imageId"], original_url)
+                else:
+                    img = load_remote_image(original_url) if original_url else None
+                
+                if not img:
+                    continue
+                
+                # Calculate zone positions
+                zone_x = pct_x(page_width, zone.position["x"])
+                zone_y = pct_y(page_height, zone.position["y"])
+                zone_w = pct_x(page_width, zone.size["width"])
+                zone_h = pct_y(page_height, zone.size["height"])
+                
+                # Apply transforms
+                transform = elem.get("transform", {})
+                fit_mode = transform.get("fitMode", "cover")
+                scale = transform.get("scale", 1.0)
+                offset_x = transform.get("offsetX", 0)
+                offset_y = transform.get("offsetY", 0)
+                margin = transform.get("margin", 0)
+                rotation = transform.get("rotation", 0)
+                flip_x = transform.get("flipX", False)
+                flip_y = transform.get("flipY", False)
+                crop = transform.get("crop")
+                
+                # Apply margin
+                margin_px_x = (margin / 100.0) * zone_w
+                margin_px_y = (margin / 100.0) * zone_h
+                effective_zone_w = zone_w - (margin_px_x * 2)
+                effective_zone_h = zone_h - (margin_px_y * 2)
+                effective_zone_x = zone_x + margin_px_x
+                effective_zone_y = zone_y + margin_px_y
+                
+                # Calculate effective image dimensions (use cropped size if crop exists)
+                # This matches the TypeScript logic at lines 486-492
+                effective_img_w = img.width
+                effective_img_h = img.height
+                if crop:
+                    effective_img_w = (crop.get("width", 100) / 100.0) * img.width
+                    effective_img_h = (crop.get("height", 100) / 100.0) * img.height
+
+                # Calculate fitted size using effective dimensions
+                fitted = get_fitted_rect(effective_img_w, effective_img_h, effective_zone_w, effective_zone_h, fit_mode)
+
+                # Apply scale and calculate draw dimensions
+                draw_w = fitted["width"] * scale
+                draw_h = fitted["height"] * scale
+
+                # Calculate draw position (ABSOLUTE coordinates on page, matching TypeScript lines 504-505)
+                draw_x = effective_zone_x + fitted["x"] + offset_x
+                draw_y = effective_zone_y + fitted["y"] + offset_y
+
+                # Calculate center point for rotation (matching TypeScript lines 512-513)
+                cx = draw_x + draw_w / 2
+                cy = draw_y + draw_h / 2
+
+                # Prepare the image to draw (crop if needed)
+                if crop:
+                    # Extract crop region from original image
+                    sx = int((crop.get("x", 0) / 100.0) * img.width)
+                    sy = int((crop.get("y", 0) / 100.0) * img.height)
+                    sw = int((crop.get("width", 100) / 100.0) * img.width)
+                    sh = int((crop.get("height", 100) / 100.0) * img.height)
+
+                    # Ensure crop bounds are within image
+                    sx = max(0, min(sx, img.width - 1))
+                    sy = max(0, min(sy, img.height - 1))
+                    sw = max(1, min(sw, img.width - sx))
+                    sh = max(1, min(sh, img.height - sy))
+
+                    img_to_draw = img.crop((sx, sy, sx + sw, sy + sh))
+                else:
+                    img_to_draw = img
+
+                # Resize to draw dimensions
+                img_resized = img_to_draw.resize((int(draw_w), int(draw_h)), Image.Resampling.LANCZOS)
+
+                # Apply sharpening after resize to compensate for quality loss
+                # This is important because we're resizing already-enhanced images
+                img_resized = img_resized.filter(ImageFilter.UnsharpMask(radius=1.0, percent=120, threshold=3))
+
+                # Create a temporary canvas for transforms
+                # This simulates Canvas context save/clip/transform/draw/restore
+                temp_layer = Image.new("RGBA", (page_width, page_height), (0, 0, 0, 0))
+
+                # Apply transforms matching Canvas order: translate -> rotate -> scale(flip)
+                img_transformed = img_resized.convert("RGBA")
+
+                # Apply flips (Canvas scale with negative values)
+                if flip_x:
+                    img_transformed = img_transformed.transpose(Image.FLIP_LEFT_RIGHT)
+                if flip_y:
+                    img_transformed = img_transformed.transpose(Image.FLIP_TOP_BOTTOM)
+
+                # Apply rotation if needed (Canvas rotates CLOCKWISE, PIL rotates COUNTERCLOCKWISE)
+                if rotation != 0:
+                    # Negate rotation to match Canvas clockwise behavior
+                    img_transformed = img_transformed.rotate(-rotation, expand=True, fillcolor=(0, 0, 0, 0))
+
+                # Calculate position after rotation (image size may have changed)
+                paste_x = int(cx - img_transformed.width / 2)
+                paste_y = int(cy - img_transformed.height / 2)
+
+                # Paste transformed image to temp layer
+                temp_layer.paste(img_transformed, (paste_x, paste_y), img_transformed)
+
+                # Create clipping mask for the zone
+                mask = Image.new("L", (page_width, page_height), 0)
+                mask_draw = ImageDraw.Draw(mask)
+                mask_draw.rectangle([int(zone_x), int(zone_y), int(zone_x + zone_w), int(zone_y + zone_h)], fill=255)
+
+                # Composite the temp layer onto canvas using zone mask
+                canvas = Image.composite(temp_layer.convert("RGB"), canvas, mask)
+                
+            except Exception as e:
+                print(f"Failed to process image {elem['imageId']}: {e}")
+                continue
+    
+    # 3) Text elements
+    # Create new draw object on the final canvas after all image processing
+    if page.textElements:
+        draw = ImageDraw.Draw(canvas)
+        for text_elem in page.textElements:
+            draw_text(draw, text_elem, page_width, page_height)
+    
+    # Convert to JPEG with metadata
+    output_buffer = io.BytesIO()
+    
+    # Set DPI metadata
+    canvas.save(
+        output_buffer,
+        format="JPEG",
+        quality=JPEG_QUALITY,
+        dpi=(DPI, DPI),
+        optimize=True
+    )
+    
+    return output_buffer.getvalue()
+
+# =========================
+# ALBUM RENDERER CLASS
+# =========================
+
+class AlbumRenderer:
+    """Main album renderer with enhanced image integration."""
+    
+    def __init__(self, layouts_path: Optional[Path] = None, enhanced_dir: Optional[Path] = None):
+        self.layouts_by_id = load_layouts_by_id(layouts_path)
+        self.enhanced_manager = EnhancedImageManager(enhanced_dir) if enhanced_dir else None
+        self.enhancer = PhotoBookEnhancer()
+    
+    def generate_and_use_enhanced_images(
+        self,
+        album_file: Union[str, Path],
+        page_size: str,
+        enhanced_output_dir: Union[str, Path]
+    ) -> Path:
+        """Generate enhanced images and return the enhanced directory path."""
+        result = self.enhancer.enhance_album(
+            album_file=album_file,
+            page_size=page_size,
+            output_dir=enhanced_output_dir,
+            images_dir=None  # Use URLs from specs
+        )
+        
+        enhanced_dir = Path(enhanced_output_dir)
+        self.enhanced_manager = EnhancedImageManager(enhanced_dir)
+        
+        return enhanced_dir
+    
+    async def render_album_pages(
+        self,
+        album_data: Dict[str, Any],
+        page_size: str,
+        output_dir: Union[str, Path],
+        use_enhanced: bool = True
+    ) -> List[RenderedPage]:
+        """Render all pages of an album."""
+        output_path = Path(output_dir)
+        output_path.mkdir(parents=True, exist_ok=True)
+        
+        # Parse page size
+        page_w_in, page_h_in = [float(x) for x in page_size.lower().split("x")]
+        page_width = int(page_w_in * DPI)
+        page_height = int(page_h_in * DPI)
+        
+        # Convert data to structured format
+        album_images = [
+            AlbumImage(
+                imageId=img.get("imageId", ""),
+                image=img.get("image")
+            )
+            for img in album_data.get("data", {}).get("project_images", [])
+        ]
+        
+        album_pages = [
+            AlbumPage(
+                pageNumber=page.get("pageNumber", 0),
+                pageType=page.get("pageType"),
+                layoutId=page.get("layoutId"),
+                backgroundColor=page.get("backgroundColor"),
+                backgroundImageUrl=page.get("backgroundImageUrl"),
+                backgroundImage=page.get("backgroundImage"),
+                backgroundImageId=page.get("backgroundImageId"),
+                elements=page.get("elements"),
+                textElements=page.get("textElements")
+            )
+            for page in album_data.get("data", {}).get("pages", [])
+        ]
+        
+        album = AlbumData(pages=album_pages, project_images=album_images)
+        
+        rendered_pages = []
+        
+        for page in album.pages:
+            try:
+                buffer = await render_page(
+                    page,
+                    page_width,
+                    page_height,
+                    self.layouts_by_id,
+                    album,
+                    self.enhanced_manager if use_enhanced else None
+                )
+                
+                # Save rendered page
+                page_filename = f"page_{page.pageNumber:02d}.jpg"
+                page_path = output_path / page_filename
+                
+                with open(page_path, "wb") as f:
+                    f.write(buffer)
+                
+                rendered_pages.append(RenderedPage(
+                    pageNumber=page.pageNumber,
+                    pageType=page.pageType,
+                    buffer=buffer
+                ))
+                
+                print(f"✅ Rendered page {page.pageNumber}")
+                
+            except Exception as e:
+                print(f"❌ Failed to render page {page.pageNumber}: {e}")
+                continue
+        
+        return rendered_pages
+    
+    async def render_album_from_files(
+        self,
+        album_file: Union[str, Path],
+        page_size: str,
+        output_dir: Union[str, Path],
+        enhanced_dir: Optional[Union[str, Path]] = None,
+        auto_enhance: bool = True
+    ) -> Dict[str, Any]:
+        """Render album from album_order.json file."""
+        
+        # Load album data
+        with open(album_file, 'r') as f:
+            album_data = json.load(f)
+        
+        # Auto-generate enhanced images if requested and not provided
+        if auto_enhance and not enhanced_dir:
+            print("🔄 Generating enhanced images...")
+            enhanced_dir = self.generate_and_use_enhanced_images(
+                album_file=album_file,
+                page_size=page_size,
+                enhanced_output_dir=Path(output_dir) / "enhanced"
+            )
+            print(f"✅ Enhanced images generated in: {enhanced_dir}")
+        elif enhanced_dir:
+            self.enhanced_manager = EnhancedImageManager(Path(enhanced_dir))
+        
+        # Render pages
+        print("🎨 Rendering album pages...")
+        rendered_pages = await self.render_album_pages(
+            album_data=album_data,
+            page_size=page_size,
+            output_dir=output_dir,
+            use_enhanced=bool(enhanced_dir)
+        )
+        
+        return {
+            "success": True,
+            "total_pages": len(rendered_pages),
+            "output_dir": str(output_dir),
+            "enhanced_dir": str(enhanced_dir) if enhanced_dir else None,
+            "pages": [
+                {
+                    "pageNumber": p.pageNumber,
+                    "pageType": p.pageType,
+                    "filename": f"page_{p.pageNumber:02d}.jpg"
+                }
+                for p in rendered_pages
+            ]
+        }
+
+
+# =========================
+# COMMAND LINE INTERFACE
+# =========================
+
+if __name__ == "__main__":
+    import argparse
+    import asyncio
+    
+    parser = argparse.ArgumentParser(description="Render photobook album with enhanced images")
+    parser.add_argument("--album", required=True, help="Path to album_order.json")
+    parser.add_argument("--page-size", required=True, help="Page size like 9x9 or 12x14")
+    parser.add_argument("--output-dir", required=True, help="Output directory for rendered pages")
+    parser.add_argument("--enhanced-dir", help="Directory with enhanced images (optional)")
+    parser.add_argument("--layouts", help="Path to layouts.json (optional)")
+    parser.add_argument("--auto-enhance", action="store_true", default=True, help="Auto-generate enhanced images")
+    parser.add_argument("--no-enhance", action="store_true", help="Skip enhancement, use original images")
+    
+    args = parser.parse_args()
+    
+    async def main():
+        renderer = AlbumRenderer(
+            layouts_path=Path(args.layouts) if args.layouts else None
+        )
+        
+        result = await renderer.render_album_from_files(
+            album_file=args.album,
+            page_size=args.page_size,
+            output_dir=args.output_dir,
+            enhanced_dir=args.enhanced_dir,
+            auto_enhance=args.auto_enhance and not args.no_enhance
+        )
+        
+        print(f"\n🎉 Album rendering complete!")
+        print(f"📁 Output: {result['output_dir']}")
+        print(f"📄 Rendered: {result['total_pages']} pages")
+        if result.get('enhanced_dir'):
+            print(f"✨ Enhanced images: {result['enhanced_dir']}")
+    
+    asyncio.run(main())
