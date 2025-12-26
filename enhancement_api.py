@@ -350,7 +350,18 @@ def get_dimensions_from_order_item(item: Dict[str, Any]) -> Dict[str, float]:
 
 
 def build_album_data_from_item(item: Dict[str, Any]) -> Dict[str, Any]:
-    """Convert order item to album data format expected by renderer."""
+    """Convert order item to album data format expected by renderer.
+
+    New project_images structure:
+    {
+        "imageId": "uuid",
+        "imageUrl": "https://...",
+        "originalFilename": "...",
+        ...
+    }
+
+    Width/height are no longer provided - they will be fetched from the image URL.
+    """
     snapshot = item.get("designSnapshot", {})
     project = item.get("project", {})
     project_images = project.get("project_images", [])
@@ -362,10 +373,11 @@ def build_album_data_from_item(item: Dict[str, Any]) -> Dict[str, Any]:
                 {
                     "imageId": img.get("imageId"),
                     "image": {
-                        "url": img.get("image", {}).get("url"),
-                        "storagePath": img.get("image", {}).get("url"),
-                        "width": img.get("image", {}).get("width"),
-                        "height": img.get("image", {}).get("height")
+                        "url": img.get("imageUrl"),
+                        "storagePath": img.get("imageUrl"),
+                        # Width/height will be fetched dynamically
+                        "width": None,
+                        "height": None
                     }
                 }
                 for img in project_images

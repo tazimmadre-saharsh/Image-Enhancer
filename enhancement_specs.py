@@ -7,11 +7,14 @@ Data structures and utilities for managing image enhancement specifications.
 
 from __future__ import annotations
 
+import io
 import json
 import tempfile
+import requests
 from pathlib import Path
 from typing import Dict, Any, List, Tuple, Optional
 from dataclasses import dataclass, asdict
+from PIL import Image, ImageOps
 
 
 @dataclass
@@ -35,9 +38,58 @@ class EnhancementResult:
     metadata: Optional[Dict[str, Any]] = None
 
 
+def fetch_image_dimensions(url: str, timeout: int = 20) -> Tuple[int, int]:
+    """
+    Fetch image dimensions from URL by loading the image.
+
+    Args:
+        url: Image URL to fetch
+        timeout: Request timeout in seconds
+
+    Returns:
+        Tuple of (width, height) in pixels
+
+    Raises:
+        ValueError: If URL is invalid or image cannot be loaded
+    """
+    if not url or not isinstance(url, str):
+        raise ValueError("Missing image URL for dimension fetch")
+
+    headers = {"User-Agent": "Mozilla/5.0 (compatible; AlbumRenderer/1.0)"}
+    response = requests.get(url, headers=headers, timeout=timeout)
+    response.raise_for_status()
+
+    img = Image.open(io.BytesIO(response.content))
+
+    # Apply EXIF orientation correction to get correct dimensions
+    try:
+        img = ImageOps.exif_transpose(img)
+    except (AttributeError, OSError, TypeError):
+        pass
+
+    return img.width, img.height
+
+
 class SpecGenerator:
     """Generates enhancement specifications from album and layout data."""
-    
+
+    def __init__(self):
+        # Cache for fetched image dimensions to avoid repeated requests
+        self._dimension_cache: Dict[str, Tuple[int, int]] = {}
+
+    def _get_cached_dimensions(self, url: str) -> Optional[Tuple[int, int]]:
+        """Get dimensions from cache or fetch and cache them."""
+        if url in self._dimension_cache:
+            return self._dimension_cache[url]
+
+        try:
+            dims = fetch_image_dimensions(url)
+            self._dimension_cache[url] = dims
+            return dims
+        except Exception as e:
+            print(f"⚠️ Failed to fetch dimensions for {url}: {e}")
+            return None
+
     def parse_page_size(self, spec: str) -> Tuple[float, float]:
         """Parse page size like '9x9' or '12x14' into (width, height)."""
         spec = spec.lower().replace(" ", "")
@@ -50,16 +102,42 @@ class SpecGenerator:
             raise ValueError(f"Invalid page numbers in '{spec}'")
     
     def build_image_dimensions(self, album: Dict[str, Any]) -> Dict[str, Dict[str, Any]]:
-        """Extract image dimensions from album data."""
+        """Extract image dimensions from album data.
+
+        Handles both old structure (with image.width/height) and new structure
+        (where dimensions need to be fetched from imageUrl).
+        """
         mapping = {}
         data = album.get("data", {})
         for item in data.get("project_images", []):
             image_id = item.get("imageId")
+
+            # Try old structure first (nested image object)
             img = item.get("image", {})
             w, h = img.get("width"), img.get("height")
             url = img.get("url") or img.get("storagePath")
-            if image_id and isinstance(w, int) and isinstance(h, int) and w > 0 and h > 0:
+
+            # Try new structure (direct imageUrl field)
+            if not url:
+                url = item.get("imageUrl")
+
+            if not image_id or not url:
+                continue
+
+            # If we have valid dimensions, use them
+            if isinstance(w, int) and isinstance(h, int) and w > 0 and h > 0:
                 mapping[image_id] = {"width": w, "height": h, "url": url}
+            else:
+                # Fetch dimensions from URL
+                dims = self._get_cached_dimensions(url)
+                if dims:
+                    w, h = dims
+                    mapping[image_id] = {"width": w, "height": h, "url": url}
+                    print(f"📐 Fetched dimensions for {image_id}: {w}x{h}")
+                else:
+                    # Still add the URL so we can try to process the image
+                    mapping[image_id] = {"width": None, "height": None, "url": url}
+
         return mapping
     
     def build_layouts_by_id(self, layouts: List[Dict[str, Any]]) -> Dict[str, Dict[str, Any]]:
@@ -142,12 +220,13 @@ class SpecGenerator:
                 transform = elem.get("transform", {})
                 crop = transform.get("crop")
                 img_info = image_dims.get(image_id)
-                
-                if crop and img_info:
+
+                # Only apply crop adjustment if we have valid dimensions
+                if crop and img_info and img_info.get("width") and img_info.get("height"):
                     adjusted_short_in = self.apply_crop_adjustment(
                         base_short_in, crop, img_info["width"], img_info["height"]
                     )
-                
+
                 # Track maximum requirement
                 current = required_by_image.get(image_id, (0.0, -1, None))
                 if adjusted_short_in > current[0]:
@@ -228,7 +307,8 @@ class SpecGenerator:
                 crop = transform.get("crop")
                 img_info = image_dims.get(image_id)
 
-                if crop and img_info:
+                # Only apply crop adjustment if we have valid dimensions
+                if crop and img_info and img_info.get("width") and img_info.get("height"):
                     adjusted_short_in = self.apply_crop_adjustment(
                         base_short_in, crop, img_info["width"], img_info["height"]
                     )

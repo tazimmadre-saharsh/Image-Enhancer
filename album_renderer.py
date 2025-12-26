@@ -93,6 +93,18 @@ FONT_FILES = {
 class AlbumImage:
     imageId: str
     image: Optional[Dict[str, Any]] = None
+    # Direct URL field for new API structure
+    imageUrl: Optional[str] = None
+
+    def get_url(self) -> Optional[str]:
+        """Get image URL from either nested image object or direct imageUrl field."""
+        # Try nested image object first (old structure)
+        if self.image:
+            url = self.image.get("url") or self.image.get("storagePath")
+            if url:
+                return url
+        # Fall back to direct imageUrl (new structure)
+        return self.imageUrl
 
 @dataclass
 class AlbumPage:
@@ -414,8 +426,9 @@ async def render_page(
     elif page.backgroundImageId or (page.backgroundImage and page.backgroundImage.get("imageId")):
         bg_image_id = page.backgroundImageId or page.backgroundImage.get("imageId")
         bg_image_obj = next((p for p in album.project_images if p.imageId == bg_image_id), None)
-        if bg_image_obj and bg_image_obj.image:
-            bg_url = bg_image_obj.image.get("url") or bg_image_obj.image.get("storagePath")
+        if bg_image_obj:
+            # Get URL using helper method (supports both old and new structures)
+            bg_url = bg_image_obj.get_url()
     
     if bg_url:
         try:
@@ -502,10 +515,13 @@ async def render_page(
                 continue
             
             image_obj = next((p for p in album.project_images if p.imageId == elem["imageId"]), None)
-            if not image_obj or not image_obj.image:
+            if not image_obj:
                 continue
-            
-            original_url = image_obj.image.get("url") or image_obj.image.get("storagePath")
+
+            # Get URL using helper method (supports both old and new structures)
+            original_url = image_obj.get_url()
+            if not original_url:
+                continue
             
             try:
                 # Use enhanced image if available, fallback to original
@@ -696,11 +712,12 @@ class AlbumRenderer:
         page_width = int(page_w_in * DPI)
         page_height = int(page_h_in * DPI)
         
-        # Convert data to structured format
+        # Convert data to structured format (supports both old and new API structures)
         album_images = [
             AlbumImage(
                 imageId=img.get("imageId", ""),
-                image=img.get("image")
+                image=img.get("image"),
+                imageUrl=img.get("imageUrl")  # New structure has direct imageUrl
             )
             for img in album_data.get("data", {}).get("project_images", [])
         ]
@@ -846,12 +863,13 @@ class AlbumRenderer:
             self.enhanced_manager = EnhancedImageManager(enhanced_dir)
             print(f"✅ Enhanced images generated in: {enhanced_dir}")
 
-        # Convert data to structured format
+        # Convert data to structured format (supports both old and new API structures)
         data = album_data.get("data", album_data)
         album_images = [
             AlbumImage(
                 imageId=img.get("imageId", ""),
-                image=img.get("image")
+                image=img.get("image"),
+                imageUrl=img.get("imageUrl")  # New structure has direct imageUrl
             )
             for img in data.get("project_images", [])
         ]
