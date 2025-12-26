@@ -167,6 +167,91 @@ class SpecGenerator:
         
         return specs
     
+    def generate_from_album_data_with_dimensions(
+        self,
+        album_data: Dict[str, Any],
+        dimensions: Dict[str, float],
+        layouts_data: List[Dict[str, Any]]
+    ) -> List[EnhancementSpec]:
+        """
+        Generate enhancement specs using different dimensions for cover vs content pages.
+
+        Args:
+            album_data: Album data dict
+            dimensions: Dict with inner_width, inner_height, cover_width, cover_height
+            layouts_data: List of layout definitions
+
+        Returns:
+            List of EnhancementSpec with proper print_inches_short_side per page type
+        """
+        layouts_by_id = self.build_layouts_by_id(layouts_data)
+        image_dims = self.build_image_dimensions(album_data)
+
+        # Track max required inches per image
+        required_by_image: Dict[str, Tuple[float, int, str]] = {}
+
+        data = album_data.get("data", {})
+        for page in data.get("pages", []):
+            layout_id = page.get("layoutId")
+            if not layout_id or layout_id not in layouts_by_id:
+                continue
+
+            layout = layouts_by_id[layout_id]
+            page_no = int(page.get("pageNumber", -1))
+            page_type = page.get("pageType", "content")
+
+            # Determine page dimensions based on type
+            if page_type in ("cover-front", "cover-back"):
+                page_w = dimensions.get("cover_width", 10.0)
+                page_h = dimensions.get("cover_height", 10.0)
+            else:
+                page_w = dimensions.get("inner_width", 9.0)
+                page_h = dimensions.get("inner_height", 9.0)
+
+            for elem in page.get("elements", []):
+                image_id = elem.get("imageId")
+                zone_id = elem.get("zoneId")
+                if not image_id or not zone_id:
+                    continue
+
+                zone = self.find_zone(layout, zone_id)
+                if not zone:
+                    continue
+
+                base_short_in = self.compute_zone_short_inches(zone, page_w, page_h)
+                if base_short_in <= 0:
+                    continue
+
+                # Apply crop adjustment if needed
+                adjusted_short_in = base_short_in
+                transform = elem.get("transform", {})
+                crop = transform.get("crop")
+                img_info = image_dims.get(image_id)
+
+                if crop and img_info:
+                    adjusted_short_in = self.apply_crop_adjustment(
+                        base_short_in, crop, img_info["width"], img_info["height"]
+                    )
+
+                # Track maximum requirement
+                current = required_by_image.get(image_id, (0.0, -1, None))
+                if adjusted_short_in > current[0]:
+                    url = img_info.get("url") if img_info else None
+                    required_by_image[image_id] = (adjusted_short_in, page_no, url)
+
+        # Convert to specs
+        specs = []
+        for img_id in sorted(required_by_image.keys()):
+            inches, page_no, url = required_by_image[img_id]
+            specs.append(EnhancementSpec(
+                imageId=img_id,
+                pageNo=page_no,
+                print_inches_short_side=round(inches, 4),
+                imageUrl=url
+            ))
+
+        return specs
+
     def generate_from_files(self, album_file: str | Path, page_size: str, layouts_file: Optional[str | Path] = None) -> List[EnhancementSpec]:
         """Generate enhancement specs from files."""
         with open(album_file, 'r') as f:

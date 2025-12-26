@@ -20,7 +20,7 @@ import cv2
 import numpy as np
 
 from photobook_enhancer import PhotoBookEnhancer
-from enhancement_specs import EnhancementSpec
+from enhancement_specs import EnhancementSpec, SpecGenerator
 from image_processor import ImageProcessor
 
 # =========================
@@ -805,6 +805,173 @@ class AlbumRenderer:
                 for p in rendered_pages
             ]
         }
+
+    async def render_album_with_dimensions(
+        self,
+        album_data: Dict[str, Any],
+        dimensions: Dict[str, float],
+        output_dir: Union[str, Path],
+        auto_enhance: bool = True
+    ) -> Dict[str, Any]:
+        """
+        Render album with different dimensions for cover vs content pages.
+
+        Args:
+            album_data: Album data dict with pages and project_images
+            dimensions: Dict with inner_width, inner_height, cover_width, cover_height (in inches)
+            output_dir: Output directory for rendered pages
+            auto_enhance: Whether to auto-generate enhanced images
+
+        Returns:
+            Dict with success status, page count, and page details
+        """
+        output_path = Path(output_dir)
+        output_path.mkdir(parents=True, exist_ok=True)
+
+        # Calculate pixel dimensions for both sizes
+        inner_w_px = int(dimensions.get("inner_width", 9.0) * DPI)
+        inner_h_px = int(dimensions.get("inner_height", 9.0) * DPI)
+        cover_w_px = int(dimensions.get("cover_width", 10.0) * DPI)
+        cover_h_px = int(dimensions.get("cover_height", 10.0) * DPI)
+
+        print(f"📐 Inner page size: {dimensions.get('inner_width')}x{dimensions.get('inner_height')} inches ({inner_w_px}x{inner_h_px} px)")
+        print(f"📐 Cover page size: {dimensions.get('cover_width')}x{dimensions.get('cover_height')} inches ({cover_w_px}x{cover_h_px} px)")
+
+        # Auto-enhance if requested
+        if auto_enhance:
+            print("🔄 Generating enhanced images...")
+            enhanced_dir = await self._enhance_with_dimensions(
+                album_data, dimensions, output_path / "enhanced"
+            )
+            self.enhanced_manager = EnhancedImageManager(enhanced_dir)
+            print(f"✅ Enhanced images generated in: {enhanced_dir}")
+
+        # Convert data to structured format
+        data = album_data.get("data", album_data)
+        album_images = [
+            AlbumImage(
+                imageId=img.get("imageId", ""),
+                image=img.get("image")
+            )
+            for img in data.get("project_images", [])
+        ]
+
+        album_pages = [
+            AlbumPage(
+                pageNumber=page.get("pageNumber", 0),
+                pageType=page.get("pageType"),
+                layoutId=page.get("layoutId"),
+                backgroundColor=page.get("backgroundColor"),
+                backgroundImageUrl=page.get("backgroundImageUrl"),
+                backgroundImage=page.get("backgroundImage"),
+                backgroundImageId=page.get("backgroundImageId"),
+                elements=page.get("elements"),
+                textElements=page.get("textElements")
+            )
+            for page in data.get("pages", [])
+        ]
+
+        album = AlbumData(pages=album_pages, project_images=album_images)
+
+        rendered_pages = []
+        print("🎨 Rendering album pages...")
+
+        for page in album.pages:
+            try:
+                # Determine dimensions based on page type
+                if page.pageType in ("cover-front", "cover-back"):
+                    page_width, page_height = cover_w_px, cover_h_px
+                    page_type_label = "cover"
+                else:
+                    page_width, page_height = inner_w_px, inner_h_px
+                    page_type_label = "inner"
+
+                # Render page
+                buffer = await render_page(
+                    page,
+                    page_width,
+                    page_height,
+                    self.layouts_by_id,
+                    album,
+                    self.enhanced_manager
+                )
+
+                # Save rendered page
+                page_filename = f"page_{page.pageNumber:02d}.jpg"
+                page_path = output_path / page_filename
+
+                with open(page_path, "wb") as f:
+                    f.write(buffer)
+
+                rendered_pages.append({
+                    "pageNumber": page.pageNumber,
+                    "pageType": page.pageType,
+                    "filename": page_filename,
+                    "width_px": page_width,
+                    "height_px": page_height,
+                    "size_type": page_type_label
+                })
+
+                print(f"✅ Rendered page {page.pageNumber} ({page_type_label}: {page_width}x{page_height})")
+
+            except Exception as e:
+                print(f"❌ Failed to render page {page.pageNumber}: {e}")
+                continue
+
+        return {
+            "success": True,
+            "total_pages": len(rendered_pages),
+            "output_dir": str(output_path),
+            "enhanced_dir": str(output_path / "enhanced") if auto_enhance else None,
+            "dimensions": dimensions,
+            "pages": rendered_pages
+        }
+
+    async def _enhance_with_dimensions(
+        self,
+        album_data: Dict[str, Any],
+        dimensions: Dict[str, float],
+        enhanced_output_dir: Union[str, Path]
+    ) -> Path:
+        """
+        Generate enhanced images using dimension-aware specs.
+
+        Args:
+            album_data: Album data dict
+            dimensions: Dict with inner/cover width/height
+            enhanced_output_dir: Output directory for enhanced images
+
+        Returns:
+            Path to enhanced images directory
+        """
+        enhanced_dir = Path(enhanced_output_dir)
+        enhanced_dir.mkdir(parents=True, exist_ok=True)
+
+        # Load layouts
+        layouts_file = Path(__file__).parent / "layouts.json"
+        with open(layouts_file, 'r') as f:
+            layouts_data = json.load(f)
+
+        # Generate specs with dimension awareness
+        spec_generator = SpecGenerator()
+        specs = spec_generator.generate_from_album_data_with_dimensions(
+            album_data, dimensions, layouts_data
+        )
+
+        if not specs:
+            print("⚠️ No enhancement specs generated")
+            return enhanced_dir
+
+        print(f"📋 Generated {len(specs)} enhancement specs")
+
+        # Process images using ImageProcessor
+        processor = ImageProcessor()
+        results = processor.enhance_images_from_specs(specs, enhanced_dir, images_dir=None)
+
+        successful = sum(1 for r in results if r.success)
+        print(f"✅ Enhanced {successful}/{len(specs)} images")
+
+        return enhanced_dir
 
 
 # =========================

@@ -8,6 +8,13 @@ tqdm>=4.65.0
 
 # HTTP requests for image fetching
 requests>=2.31.0
+httpx>=0.25.0
+
+# AWS S3 uploads
+boto3>=1.34.0
+
+# Environment variables
+python-dotenv>=1.0.0
 
 # Font handling
 fonttools>=4.40.0

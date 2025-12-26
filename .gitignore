@@ -31,6 +31,7 @@ enhancement_report.json
 print_enhance_report.csv
 job_enhancement_report.csv
 *.log
+logs/
 
 # Testing
 .pytest_cache/
@@ -74,3 +75,9 @@ dmypy.json
 # Environment variables
 .env
 .env.local
+
+# AI
+ai_output/
+.claude
+.gptcache
+.cursor
