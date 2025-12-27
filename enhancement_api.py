@@ -51,15 +51,20 @@ from enhancement_specs import EnhancementSpec, validate_specs, SpecGenerator
 from print_enhancer import EnhanceConfig
 from album_renderer import AlbumRenderer
 
-# Strapi API Configuration (from environment variables)
+# Strapi API Configuration - Production (from environment variables)
 STRAPI_API_TOKEN = os.getenv("STRAPI_API_TOKEN", "")
 STRAPI_API_BASE_URL = os.getenv("STRAPI_API_BASE_URL", "http://localhost:1338")
+
+# Strapi API Configuration - Staging/DEV (from environment variables)
+STRAPI_API_TOKEN_STAGING = os.getenv("STRAPI_API_TOKEN_STAGING", "")
+STRAPI_API_BASE_URL_STAGING = os.getenv("STRAPI_API_BASE_URL_STAGING", "http://localhost:1338")
 
 # AWS S3 Configuration (from environment variables)
 AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID", "")
 AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY", "")
 AWS_REGION = os.getenv("AWS_REGION", "ap-south-1")
 AWS_BUCKET = os.getenv("AWS_BUCKET", "")
+AWS_BUCKET_STAGING = os.getenv("AWS_BUCKET_STAGING", "")
 
 # Initialize S3 client
 s3_client = boto3.client(
@@ -69,6 +74,29 @@ s3_client = boto3.client(
     region_name=AWS_REGION,
     config=BotoConfig(signature_version='s3v4')
 )
+
+
+def get_env_config(env: Optional[str] = None) -> Dict[str, str]:
+    """
+    Return environment-specific config based on env parameter.
+
+    Args:
+        env: Optional environment string. If "staging", returns DEV config.
+
+    Returns:
+        Dict with strapi_token, strapi_base_url, and s3_bucket keys.
+    """
+    if env == "staging":
+        return {
+            "strapi_token": STRAPI_API_TOKEN_STAGING,
+            "strapi_base_url": STRAPI_API_BASE_URL_STAGING,
+            "s3_bucket": AWS_BUCKET_STAGING
+        }
+    return {
+        "strapi_token": STRAPI_API_TOKEN,
+        "strapi_base_url": STRAPI_API_BASE_URL,
+        "s3_bucket": AWS_BUCKET
+    }
 
 
 class ImageEnhancementAPI:
@@ -307,12 +335,17 @@ class ImageEnhancementAPI:
 # ORDER PROCESSING HELPERS
 # =========================
 
-async def fetch_order_data(order_id: str) -> Dict[str, Any]:
-    """Fetch order data from Strapi API with bearer token auth."""
+async def fetch_order_data(order_id: str, config: Dict[str, str]) -> Dict[str, Any]:
+    """Fetch order data from Strapi API with bearer token auth.
+
+    Args:
+        order_id: The order documentId to fetch
+        config: Environment config dict with strapi_base_url and strapi_token
+    """
     async with httpx.AsyncClient(timeout=30.0) as client:
         response = await client.get(
-            f"{STRAPI_API_BASE_URL}/api/orders/{order_id}/details",
-            headers={"Authorization": f"Bearer {STRAPI_API_TOKEN}"}
+            f"{config['strapi_base_url']}/api/orders/{order_id}/details",
+            headers={"Authorization": f"Bearer {config['strapi_token']}"}
         )
         response.raise_for_status()
         return response.json()
@@ -390,12 +423,13 @@ def build_album_data_from_item(item: Dict[str, Any]) -> Dict[str, Any]:
 # ORDER ITEM STATUS UPDATES
 # =========================
 
-async def update_order_item_in_progress(item_id: str) -> bool:
+async def update_order_item_in_progress(item_id: str, config: Dict[str, str]) -> bool:
     """
     Update order item status to 'in_progress' before processing.
 
     Args:
         item_id: The order item documentId
+        config: Environment config dict with strapi_base_url and strapi_token
 
     Returns:
         True if update succeeded, False otherwise
@@ -403,9 +437,9 @@ async def update_order_item_in_progress(item_id: str) -> bool:
     try:
         async with httpx.AsyncClient(timeout=30.0) as client:
             response = await client.put(
-                f"{STRAPI_API_BASE_URL}/api/order-items/{item_id}",
+                f"{config['strapi_base_url']}/api/order-items/{item_id}",
                 headers={
-                    "Authorization": f"Bearer {STRAPI_API_TOKEN}",
+                    "Authorization": f"Bearer {config['strapi_token']}",
                     "Content-Type": "application/json"
                 },
                 json={
@@ -424,13 +458,14 @@ async def update_order_item_in_progress(item_id: str) -> bool:
         return False
 
 
-async def update_order_item_completed(item_id: str, exported_pages: List[Dict[str, Any]]) -> bool:
+async def update_order_item_completed(item_id: str, exported_pages: List[Dict[str, Any]], config: Dict[str, str]) -> bool:
     """
     Update order item status to 'completed' after successful processing.
 
     Args:
         item_id: The order item documentId
         exported_pages: List of page info dicts with pageNumber, filename, url etc.
+        config: Environment config dict with strapi_base_url and strapi_token
 
     Returns:
         True if update succeeded, False otherwise
@@ -438,9 +473,9 @@ async def update_order_item_completed(item_id: str, exported_pages: List[Dict[st
     try:
         async with httpx.AsyncClient(timeout=30.0) as client:
             response = await client.put(
-                f"{STRAPI_API_BASE_URL}/api/order-items/{item_id}",
+                f"{config['strapi_base_url']}/api/order-items/{item_id}",
                 headers={
-                    "Authorization": f"Bearer {STRAPI_API_TOKEN}",
+                    "Authorization": f"Bearer {config['strapi_token']}",
                     "Content-Type": "application/json"
                 },
                 json={
@@ -460,13 +495,14 @@ async def update_order_item_completed(item_id: str, exported_pages: List[Dict[st
         return False
 
 
-async def update_order_item_failed(item_id: str, error_message: str) -> bool:
+async def update_order_item_failed(item_id: str, error_message: str, config: Dict[str, str]) -> bool:
     """
     Update order item status to 'failed' when processing fails.
 
     Args:
         item_id: The order item documentId
         error_message: Description of what went wrong
+        config: Environment config dict with strapi_base_url and strapi_token
 
     Returns:
         True if update succeeded, False otherwise
@@ -474,9 +510,9 @@ async def update_order_item_failed(item_id: str, error_message: str) -> bool:
     try:
         async with httpx.AsyncClient(timeout=30.0) as client:
             response = await client.put(
-                f"{STRAPI_API_BASE_URL}/api/order-items/{item_id}",
+                f"{config['strapi_base_url']}/api/order-items/{item_id}",
                 headers={
-                    "Authorization": f"Bearer {STRAPI_API_TOKEN}",
+                    "Authorization": f"Bearer {config['strapi_token']}",
                     "Content-Type": "application/json"
                 },
                 json={
@@ -504,7 +540,8 @@ def upload_page_to_s3(
     order_id: str,
     item_id: str,
     page_number: int,
-    page_type: str
+    page_type: str,
+    s3_bucket: str
 ) -> Dict[str, Any]:
     """
     Upload a rendered page to S3 and return the URL info.
@@ -515,6 +552,7 @@ def upload_page_to_s3(
         item_id: The order item documentId
         page_number: The page number (0-indexed)
         page_type: The page type (cover-front, cover-back, content, etc.)
+        s3_bucket: The S3 bucket name to upload to
 
     Returns:
         Dict with url, filename, pageType, pageNumber, orderItemId
@@ -525,7 +563,7 @@ def upload_page_to_s3(
     # Upload to S3
     s3_client.upload_file(
         local_file_path,
-        AWS_BUCKET,
+        s3_bucket,
         s3_key,
         ExtraArgs={
             'ContentType': 'image/jpeg'
@@ -533,7 +571,7 @@ def upload_page_to_s3(
     )
 
     # Construct the S3 URL
-    s3_url = f"https://{AWS_BUCKET}.s3.{AWS_REGION}.amazonaws.com/{s3_key}"
+    s3_url = f"https://{s3_bucket}.s3.{AWS_REGION}.amazonaws.com/{s3_key}"
 
     return {
         "url": s3_url,
@@ -548,7 +586,8 @@ async def upload_pages_to_s3(
     pages: List[Dict[str, Any]],
     output_dir: Path,
     order_id: str,
-    item_id: str
+    item_id: str,
+    s3_bucket: str
 ) -> List[Dict[str, Any]]:
     """
     Upload all rendered pages to S3.
@@ -558,6 +597,7 @@ async def upload_pages_to_s3(
         output_dir: Directory containing the rendered page files
         order_id: The order documentId
         item_id: The order item documentId
+        s3_bucket: The S3 bucket name to upload to
 
     Returns:
         List of dicts with S3 URLs in the expected format
@@ -579,7 +619,8 @@ async def upload_pages_to_s3(
                 order_id,
                 item_id,
                 page_number,
-                page_type
+                page_type,
+                s3_bucket
             )
             uploaded_pages.append(result)
             print(f"📤 Uploaded page {page_number} to S3: {result['url']}")
@@ -602,7 +643,7 @@ async def upload_pages_to_s3(
 # BACKGROUND TASK PROCESSING
 # =========================
 
-async def process_order_background(order_id: str):
+async def process_order_background(order_id: str, env: Optional[str] = None):
     """
     Background task to process an order - fetch data, enhance images, render pages, upload to S3.
 
@@ -614,12 +655,19 @@ async def process_order_background(order_id: str):
        - Upload pages to S3
        - Update status to 'completed' with S3 URLs on success
        - Update status to 'failed' with error message on failure
+
+    Args:
+        order_id: The order documentId to process
+        env: Optional environment string. If "staging", uses DEV config.
     """
-    print(f"🚀 Starting background processing for order: {order_id}")
+    # Get environment-specific config
+    config = get_env_config(env)
+    env_label = "staging" if env == "staging" else "production"
+    print(f"🚀 Starting background processing for order: {order_id} (env: {env_label})")
 
     try:
         # Fetch order data from Strapi
-        order_data = await fetch_order_data(order_id)
+        order_data = await fetch_order_data(order_id, config)
         print(f"📦 Fetched order data with {len(order_data.get('items', []))} items")
 
         for item in order_data.get("items", []):
@@ -627,7 +675,7 @@ async def process_order_background(order_id: str):
             print(f"\n📋 Processing order item: {item_id}")
 
             # Update status to in_progress before starting
-            await update_order_item_in_progress(item_id)
+            await update_order_item_in_progress(item_id, config)
 
             # Get dimensions from templateVariant
             dims = get_dimensions_from_order_item(item)
@@ -638,7 +686,7 @@ async def process_order_background(order_id: str):
 
             if not album_data["data"]["pages"]:
                 error_msg = "No pages found in designSnapshot"
-                await update_order_item_failed(item_id, error_msg)
+                await update_order_item_failed(item_id, error_msg, config)
                 print(f"❌ {error_msg}")
                 continue
 
@@ -660,19 +708,20 @@ async def process_order_background(order_id: str):
                 print(f"✅ Rendered {len(pages)} pages locally")
 
                 # Upload all pages to S3
-                print(f"📤 Uploading pages to S3...")
+                print(f"📤 Uploading pages to S3 bucket: {config['s3_bucket']}...")
                 uploaded_pages = await upload_pages_to_s3(
                     pages=pages,
                     output_dir=output_dir,
                     order_id=order_id,
-                    item_id=item_id
+                    item_id=item_id,
+                    s3_bucket=config['s3_bucket']
                 )
 
                 # Sort by page number
                 uploaded_pages.sort(key=lambda x: x.get("pageNumber", 0))
 
                 # Update status to completed with S3 URLs
-                await update_order_item_completed(item_id, uploaded_pages)
+                await update_order_item_completed(item_id, uploaded_pages, config)
                 print(f"✅ Order item {item_id} completed with {len(uploaded_pages)} pages uploaded to S3")
 
                 # Clean up local output folder after successful upload
@@ -684,7 +733,7 @@ async def process_order_background(order_id: str):
 
             except Exception as item_error:
                 error_msg = str(item_error)
-                await update_order_item_failed(item_id, error_msg)
+                await update_order_item_failed(item_id, error_msg, config)
                 print(f"❌ Order item {item_id} failed: {error_msg}")
 
         print(f"\n🎉 Background processing completed for order: {order_id}")
@@ -913,7 +962,10 @@ def create_fastapi_app():
             raise HTTPException(status_code=400, detail=str(e))
 
     @app.post("/process/order")
-    async def process_order(order_id: str = Form(...)):
+    async def process_order(
+        order_id: str = Form(...),
+        env: Optional[str] = Form(None)
+    ):
         """
         Process an order by ID - runs in background and returns immediately.
 
@@ -936,17 +988,22 @@ def create_fastapi_app():
 
         Args:
             order_id: The order documentId to process
+            env: Optional environment string. If "staging", uses DEV config
+                 (AWS_BUCKET_STAGING, STRAPI_API_TOKEN_STAGING, STRAPI_API_BASE_URL_STAGING).
+                 Otherwise uses production config.
         """
         if not order_id or not order_id.strip():
             raise HTTPException(status_code=400, detail="order_id is required")
 
-        # Start background task using asyncio
-        asyncio.create_task(process_order_background(order_id))
+        # Start background task using asyncio with environment config
+        asyncio.create_task(process_order_background(order_id, env))
 
+        env_label = "staging" if env == "staging" else "production"
         return JSONResponse({
             "success": True,
             "message": "Order processing started in background",
             "order_id": order_id,
+            "env": env_label,
             "status": "processing_started",
             "note": "Check order item photoExportStatus in database to monitor progress"
         })
