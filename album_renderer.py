@@ -15,7 +15,7 @@ from pathlib import Path
 from typing import Dict, Any, List, Optional, Tuple, Union
 from dataclasses import dataclass
 import requests
-from PIL import Image, ImageDraw, ImageFont, ImageOps, ImageFilter
+from PIL import Image, ImageDraw, ImageFont, ImageOps, ImageFilter, ImageChops
 import cv2
 import numpy as np
 
@@ -542,6 +542,7 @@ async def render_page(
                 # Apply transforms
                 transform = elem.get("transform", {})
                 fit_mode = transform.get("fitMode", "cover")
+                layout_mode = transform.get("layoutMode", None)
                 scale = transform.get("scale", 1.0)
                 offset_x = transform.get("offsetX", 0)
                 offset_y = transform.get("offsetY", 0)
@@ -550,6 +551,13 @@ async def render_page(
                 flip_x = transform.get("flipX", False)
                 flip_y = transform.get("flipY", False)
                 crop = transform.get("crop")
+
+                # When layoutMode is "original", use contain to show full image without cropping
+                # This preserves the original aspect ratio with letterboxing/pillarboxing
+                if layout_mode == "original":
+                    fit_mode = "contain"
+                    # Reset crop when showing original - use full image
+                    crop = None
                 
                 # Apply margin
                 margin_px_x = (margin / 100.0) * zone_w
@@ -571,12 +579,23 @@ async def render_page(
                 fitted = get_fitted_rect(effective_img_w, effective_img_h, effective_zone_w, effective_zone_h, fit_mode)
 
                 # Apply scale and calculate draw dimensions
-                draw_w = fitted["width"] * scale
-                draw_h = fitted["height"] * scale
+                # When there's a crop, the crop already represents the user's zoomed/panned view,
+                # so we should NOT apply scale again (it would double-zoom)
+                if crop:
+                    draw_w = fitted["width"]
+                    draw_h = fitted["height"]
+                else:
+                    draw_w = fitted["width"] * scale
+                    draw_h = fitted["height"] * scale
 
-                # Calculate draw position (ABSOLUTE coordinates on page, matching TypeScript lines 504-505)
-                draw_x = effective_zone_x + fitted["x"] + offset_x
-                draw_y = effective_zone_y + fitted["y"] + offset_y
+                # Calculate draw position (ABSOLUTE coordinates on page)
+                # When there's a crop, don't add offset - the crop position already defines the view
+                if crop:
+                    draw_x = effective_zone_x + fitted["x"]
+                    draw_y = effective_zone_y + fitted["y"]
+                else:
+                    draw_x = effective_zone_x + fitted["x"] + offset_x
+                    draw_y = effective_zone_y + fitted["y"] + offset_y
 
                 # Calculate center point for rotation (matching TypeScript lines 512-513)
                 cx = draw_x + draw_w / 2
@@ -637,8 +656,16 @@ async def render_page(
                 mask_draw = ImageDraw.Draw(mask)
                 mask_draw.rectangle([int(zone_x), int(zone_y), int(zone_x + zone_w), int(zone_y + zone_h)], fill=255)
 
-                # Composite the temp layer onto canvas using zone mask
-                canvas = Image.composite(temp_layer.convert("RGB"), canvas, mask)
+                # Apply zone mask to temp_layer's alpha channel to clip outside the zone
+                # This preserves transparency within the zone (for contain/letterbox areas)
+                temp_alpha = temp_layer.split()[3]  # Get alpha channel
+                clipped_alpha = ImageChops.multiply(temp_alpha, mask)  # Combine with zone mask
+                temp_layer.putalpha(clipped_alpha)
+
+                # Alpha composite onto canvas - transparent areas show canvas background
+                canvas = canvas.convert("RGBA")
+                canvas = Image.alpha_composite(canvas, temp_layer)
+                canvas = canvas.convert("RGB")
                 
             except Exception as e:
                 print(f"Failed to process image {elem['imageId']}: {e}")
