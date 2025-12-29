@@ -552,72 +552,76 @@ async def render_page(
                 flip_y = transform.get("flipY", False)
                 crop = transform.get("crop")
 
-                # When layoutMode is "original", use contain to show full image without cropping
-                # This preserves the original aspect ratio with letterboxing/pillarboxing
-                if layout_mode == "original":
-                    fit_mode = "contain"
-                    # Reset crop when showing original - use full image
-                    crop = None
-                
-                # Apply margin
-                margin_px_x = (margin / 100.0) * zone_w
-                margin_px_y = (margin / 100.0) * zone_h
-                effective_zone_w = zone_w - (margin_px_x * 2)
-                effective_zone_h = zone_h - (margin_px_y * 2)
-                effective_zone_x = zone_x + margin_px_x
-                effective_zone_y = zone_y + margin_px_y
-                
-                # Calculate effective image dimensions (use cropped size if crop exists)
-                # This matches the TypeScript logic at lines 486-492
-                effective_img_w = img.width
-                effective_img_h = img.height
-                if crop:
-                    effective_img_w = (crop.get("width", 100) / 100.0) * img.width
-                    effective_img_h = (crop.get("height", 100) / 100.0) * img.height
-
-                # Calculate fitted size using effective dimensions
-                fitted = get_fitted_rect(effective_img_w, effective_img_h, effective_zone_w, effective_zone_h, fit_mode)
-
-                # Apply scale and calculate draw dimensions
-                # When there's a crop, the crop already represents the user's zoomed/panned view,
-                # so we should NOT apply scale again (it would double-zoom)
-                if crop:
-                    draw_w = fitted["width"]
-                    draw_h = fitted["height"]
+                # Apply margin only for 'smart' fitMode (matches frontend behavior)
+                if fit_mode == "smart":
+                    margin_px_x = (margin / 100.0) * zone_w
+                    margin_px_y = (margin / 100.0) * zone_h
+                    effective_zone_w = zone_w - (margin_px_x * 2)
+                    effective_zone_h = zone_h - (margin_px_y * 2)
+                    effective_zone_x = zone_x + margin_px_x
+                    effective_zone_y = zone_y + margin_px_y
                 else:
+                    effective_zone_w = zone_w
+                    effective_zone_h = zone_h
+                    effective_zone_x = zone_x
+                    effective_zone_y = zone_y
+
+                # Check if we have valid crop data
+                # Crop represents scale/offset transforms, not extraction coordinates
+                has_crop = crop and crop.get("width", 0) > 0 and crop.get("height", 0) > 0
+
+                if has_crop:
+                    # Frontend crop logic: crop values define scale and offset
+                    # scaleX = 100 / crop.width, scaleY = 100 / crop.height
+                    # Image is scaled to (zone_size * scale) and positioned with offset
+                    crop_width = crop.get("width", 100)
+                    crop_height = crop.get("height", 100)
+                    crop_x = crop.get("x", 0)
+                    crop_y = crop.get("y", 0)
+
+                    scale_x = 100.0 / crop_width
+                    scale_y = 100.0 / crop_height
+
+                    # Calculate image dimensions relative to zone
+                    # The image is scaled so that crop_width% of image = 100% of zone
+                    draw_w = effective_zone_w * scale_x
+                    draw_h = effective_zone_h * scale_y
+
+                    # Calculate offset position
+                    # Frontend: offsetX = -crop.x * scaleX, offsetY = -crop.y * scaleY
+                    crop_offset_x = -crop_x * scale_x
+                    crop_offset_y = -crop_y * scale_y
+
+                    # Position image within zone (as percentage converted to pixels)
+                    draw_x = effective_zone_x + (crop_offset_x / 100.0) * effective_zone_w
+                    draw_y = effective_zone_y + (crop_offset_y / 100.0) * effective_zone_h
+
+                    # Use the full image (no extraction crop)
+                    img_to_draw = img
+
+                else:
+                    # No crop data - use original fitMode logic
+                    # When layoutMode is "original", use contain to show full image
+                    if layout_mode == "original":
+                        fit_mode = "contain"
+
+                    # Calculate fitted size
+                    fitted = get_fitted_rect(img.width, img.height, effective_zone_w, effective_zone_h, fit_mode)
+
+                    # Apply scale
                     draw_w = fitted["width"] * scale
                     draw_h = fitted["height"] * scale
 
-                # Calculate draw position (ABSOLUTE coordinates on page)
-                # When there's a crop, don't add offset - the crop position already defines the view
-                if crop:
-                    draw_x = effective_zone_x + fitted["x"]
-                    draw_y = effective_zone_y + fitted["y"]
-                else:
+                    # Calculate draw position with offset
                     draw_x = effective_zone_x + fitted["x"] + offset_x
                     draw_y = effective_zone_y + fitted["y"] + offset_y
 
-                # Calculate center point for rotation (matching TypeScript lines 512-513)
+                    # Use full image
+                    img_to_draw = img
+
+                # Calculate center point for rotation
                 cx = draw_x + draw_w / 2
                 cy = draw_y + draw_h / 2
-
-                # Prepare the image to draw (crop if needed)
-                if crop:
-                    # Extract crop region from original image
-                    sx = int((crop.get("x", 0) / 100.0) * img.width)
-                    sy = int((crop.get("y", 0) / 100.0) * img.height)
-                    sw = int((crop.get("width", 100) / 100.0) * img.width)
-                    sh = int((crop.get("height", 100) / 100.0) * img.height)
-
-                    # Ensure crop bounds are within image
-                    sx = max(0, min(sx, img.width - 1))
-                    sy = max(0, min(sy, img.height - 1))
-                    sw = max(1, min(sw, img.width - sx))
-                    sh = max(1, min(sh, img.height - sy))
-
-                    img_to_draw = img.crop((sx, sy, sx + sw, sy + sh))
-                else:
-                    img_to_draw = img
 
                 # Resize to draw dimensions
                 img_resized = img_to_draw.resize((int(draw_w), int(draw_h)), Image.Resampling.LANCZOS)
