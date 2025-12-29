@@ -643,6 +643,11 @@ async def upload_pages_to_s3(
 # BACKGROUND TASK PROCESSING
 # =========================
 
+# Track currently processing orders to prevent duplicate task creation
+# Key: (order_id, env) tuple to handle different environments separately
+_processing_orders: set[tuple[str, Optional[str]]] = set()
+
+
 async def process_order_background(order_id: str, env: Optional[str] = None):
     """
     Background task to process an order - fetch data, enhance images, render pages, upload to S3.
@@ -740,6 +745,10 @@ async def process_order_background(order_id: str, env: Optional[str] = None):
 
     except Exception as e:
         print(f"❌ Background processing failed for order {order_id}: {e}")
+
+    finally:
+        # Always remove from tracking set when done (success or failure)
+        _processing_orders.discard((order_id, env))
 
 
 # FastAPI example integration
@@ -995,10 +1004,26 @@ def create_fastapi_app():
         if not order_id or not order_id.strip():
             raise HTTPException(status_code=400, detail="order_id is required")
 
+        env_label = "staging" if env == "staging" else "production"
+
+        # Check if this order is already being processed (skip redundant tasks)
+        order_key = (order_id, env)
+        if order_key in _processing_orders:
+            return JSONResponse({
+                "success": True,
+                "message": "Order is already being processed",
+                "order_id": order_id,
+                "env": env_label,
+                "status": "already_processing",
+                "note": "Skipped redundant task creation. Check order item photoExportStatus in database to monitor progress"
+            })
+
+        # Mark order as processing before starting task
+        _processing_orders.add(order_key)
+
         # Start background task using asyncio with environment config
         asyncio.create_task(process_order_background(order_id, env))
 
-        env_label = "staging" if env == "staging" else "production"
         return JSONResponse({
             "success": True,
             "message": "Order processing started in background",
