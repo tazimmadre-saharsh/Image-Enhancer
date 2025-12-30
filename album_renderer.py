@@ -579,6 +579,14 @@ async def render_page(
                     crop_x = crop.get("x", 0)
                     crop_y = crop.get("y", 0)
 
+                    # Swap crop dimensions for 90° or 270° rotations
+                    # Frontend calculates crop values for POST-rotation state,
+                    # but backend applies crop before rotation, so we need to swap
+                    rotation_mod = rotation % 360
+                    if rotation_mod == 90 or rotation_mod == 270:
+                        crop_width, crop_height = crop_height, crop_width
+                        crop_x, crop_y = crop_y, crop_x
+
                     scale_x = 100.0 / crop_width
                     scale_y = 100.0 / crop_height
 
