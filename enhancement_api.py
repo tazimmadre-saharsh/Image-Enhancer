@@ -680,7 +680,7 @@ async def process_order_background(order_id: str, env: Optional[str] = None):
             print(f"\n📋 Processing order item: {item_id}")
 
             # Update status to in_progress before starting
-            # await update_order_item_in_progress(item_id, config)
+            await update_order_item_in_progress(item_id, config)
 
             # Get dimensions from templateVariant
             dims = get_dimensions_from_order_item(item)
