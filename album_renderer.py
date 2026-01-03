@@ -64,6 +64,30 @@ FONT_FAMILY_MAP = {
     "Caveat": "Caveat",
     '"Amatic SC"': "Amatic SC",
     "Amatic SC": "Amatic SC",
+    '"Swanky and Moo Moo"': "Swanky and Moo Moo",
+    "Swanky and Moo Moo": "Swanky and Moo Moo",
+    # New fonts
+    '"Chetta Vissto"': "Chetta Vissto",
+    "Chetta Vissto": "Chetta Vissto",
+    "ChettaVissto": "Chetta Vissto",
+    '"Classy Vogue"': "Classy Vogue",
+    "Classy Vogue": "Classy Vogue",
+    "ClassyVogue": "Classy Vogue",
+    '"Hello"': "Hello",
+    "Hello": "Hello",
+    '"League Spartan"': "League Spartan",
+    "League Spartan": "League Spartan",
+    "LeagueSpartan": "League Spartan",
+    '"New York"': "New York",
+    "New York": "New York",
+    "NewYork": "New York",
+    '"Poppins"': "Poppins",
+    "Poppins": "Poppins",
+    '"Rammetto One"': "Rammetto One",
+    "Rammetto One": "Rammetto One",
+    "RammettoOne": "Rammetto One",
+    '"Skynight"': "Skynight",
+    "Skynight": "Skynight",
     # System fonts
     "Arial": "Arial",
     "Georgia": "Georgia",
@@ -249,13 +273,50 @@ def load_font(family: str, size: int, style: str = "normal", weight: str = "norm
     # List of font paths to try
     font_attempts = []
 
+    # Normalize weight to boolean
+    is_bold = weight in ("bold", "700", "800", "900") or (isinstance(weight, int) and weight >= 700)
+    is_italic = style == "italic"
+
+    # Build suffix patterns to match (in priority order)
+    if is_bold and is_italic:
+        suffix_patterns = ["bolditalic", "bold-italic", "bold_italic", "bi", "bold", "italic", "regular", ""]
+    elif is_bold:
+        suffix_patterns = ["bold", "regular", ""]
+    elif is_italic:
+        suffix_patterns = ["italic", "regular", ""]
+    else:
+        suffix_patterns = ["regular", ""]
+
+    # Normalize family name for matching
+    family_normalized = family.lower().replace(" ", "").replace("-", "")
+
     # 1. Try fonts directory if it exists
     if FONTS_DIR.exists():
-        # Try exact match with style/weight
+        # Collect all matching font files for this family
+        matching_fonts = []
         for font_file in FONTS_DIR.glob("*.ttf"):
-            if family.lower().replace(" ", "").replace("-", "") in font_file.stem.lower().replace("-", ""):
-                font_attempts.append(str(font_file))
+            stem_normalized = font_file.stem.lower().replace("-", "").replace("_", "")
+            if family_normalized in stem_normalized:
+                matching_fonts.append(font_file)
+
+        # Try to find best match based on suffix patterns
+        for suffix in suffix_patterns:
+            for font_file in matching_fonts:
+                stem_normalized = font_file.stem.lower().replace("-", "").replace("_", "")
+                # Check if this font matches the desired suffix
+                if suffix == "":
+                    # Empty suffix matches any font (fallback)
+                    font_attempts.append(str(font_file))
+                    break
+                elif suffix in stem_normalized:
+                    font_attempts.append(str(font_file))
+                    break
+            if font_attempts:
                 break
+
+        # If no match found but we have matching fonts, use the first one
+        if not font_attempts and matching_fonts:
+            font_attempts.append(str(matching_fonts[0]))
 
     # 2. Try common system font locations
     system_font_paths = [
