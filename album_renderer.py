@@ -22,6 +22,7 @@ import numpy as np
 from photobook_enhancer import PhotoBookEnhancer
 from enhancement_specs import EnhancementSpec, SpecGenerator
 from image_processor import ImageProcessor
+from emoji_text_renderer import contains_emoji, draw_text_with_emoji
 
 # =========================
 # CONSTANTS
@@ -412,8 +413,13 @@ def draw_text(
 
     color = text_elem.get("color", "#000000")
 
-    # Draw text
-    draw.text((x, y), content, fill=color, font=font)
+    # Draw text (with emoji support if text contains emoji)
+    if contains_emoji(content):
+        canvas = draw._image
+        emoji_scale = 1.0  # Emoji size matches text height (pilmoji handles scaling internally)
+        draw_text_with_emoji(canvas, (int(x), int(y)), content, color, font, emoji_scale)
+    else:
+        draw.text((x, y), content, fill=color, font=font)
 
 # =========================
 # ENHANCED IMAGE INTEGRATION

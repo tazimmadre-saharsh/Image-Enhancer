@@ -19,6 +19,10 @@ python-dotenv>=1.0.0
 # Font handling
 fonttools>=4.40.0
 
+# Emoji rendering support
+pilmoji>=2.0.0,<2.1.0
+emoji>=1.7.0,<2.0.0
+
 # Web framework dependencies (for API integration)
 fastapi>=0.104.0
 python-multipart>=0.0.6
