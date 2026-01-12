@@ -269,10 +269,15 @@ def resolve_font_family(css_font_family: str) -> str:
     
     return "Arial"
 
-def load_font(family: str, size: int, style: str = "normal", weight: str = "normal") -> ImageFont.FreeTypeFont:
-    """Load font with fallback to system fonts if not found."""
+def load_font(family: str, size: int, style: str = "normal", weight: str = "normal") -> tuple:
+    """Load font with fallback to system fonts if not found.
+
+    Returns:
+        tuple: (ImageFont.FreeTypeFont, bool) - The font and whether bold was requested but not found
+    """
     # List of font paths to try
     font_attempts = []
+    bold_requested_but_not_found = False
 
     # Normalize weight to boolean
     is_bold = weight in ("bold", "700", "800", "900") or (isinstance(weight, int) and weight >= 700)
@@ -291,6 +296,9 @@ def load_font(family: str, size: int, style: str = "normal", weight: str = "norm
     # Normalize family name for matching
     family_normalized = family.lower().replace(" ", "").replace("-", "")
 
+    # Track which suffix was actually matched
+    matched_suffix = None
+
     # 1. Try fonts directory if it exists
     if FONTS_DIR.exists():
         # Collect all matching font files for this family
@@ -308,9 +316,11 @@ def load_font(family: str, size: int, style: str = "normal", weight: str = "norm
                 if suffix == "":
                     # Empty suffix matches any font (fallback)
                     font_attempts.append(str(font_file))
+                    matched_suffix = suffix
                     break
                 elif suffix in stem_normalized:
                     font_attempts.append(str(font_file))
+                    matched_suffix = suffix
                     break
             if font_attempts:
                 break
@@ -318,6 +328,12 @@ def load_font(family: str, size: int, style: str = "normal", weight: str = "norm
         # If no match found but we have matching fonts, use the first one
         if not font_attempts and matching_fonts:
             font_attempts.append(str(matching_fonts[0]))
+            matched_suffix = ""
+
+    # Check if bold was requested but we fell back to non-bold
+    if is_bold and matched_suffix not in ["bold", "bolditalic", "bold-italic", "bold_italic", "bi"]:
+        bold_requested_but_not_found = True
+        print(f"[DEBUG] Bold requested for '{family}' but no bold variant found, will simulate bold")
 
     # 2. Try common system font locations
     system_font_paths = [
@@ -341,7 +357,7 @@ def load_font(family: str, size: int, style: str = "normal", weight: str = "norm
     # Try each font path
     for font_path in font_attempts:
         try:
-            return ImageFont.truetype(font_path, size)
+            return (ImageFont.truetype(font_path, size), bold_requested_but_not_found)
         except (OSError, IOError):
             continue
 
@@ -349,9 +365,9 @@ def load_font(family: str, size: int, style: str = "normal", weight: str = "norm
     # Create a simple scalable default
     try:
         # Try to use PIL's default as TrueType if possible
-        return ImageFont.load_default()
+        return (ImageFont.load_default(), bold_requested_but_not_found)
     except:
-        return ImageFont.load_default()
+        return (ImageFont.load_default(), bold_requested_but_not_found)
 
 def draw_text(
     draw: ImageDraw.ImageDraw,
@@ -382,8 +398,11 @@ def draw_text(
 
     print(f"[DEBUG] Font family: '{css_font_family}' -> '{font_family}'")
 
-    # Load font
-    font = load_font(font_family, font_px, font_style, font_weight)
+    # Load font (returns tuple: font, simulate_bold)
+    font, simulate_bold = load_font(font_family, font_px, font_style, font_weight)
+
+    # Calculate stroke width for simulated bold (proportional to font size)
+    stroke_width = max(1, font_px // 50) if simulate_bold else 0
 
     # Check text width and adjust if needed
     try:
@@ -393,20 +412,52 @@ def draw_text(
         # Fallback for older PIL versions
         text_width = font.getsize(content)[0] if hasattr(font, 'getsize') else len(content) * font_px * 0.6
 
-    max_allowed_width = page_w * 0.8
+    # Safe area is 10% from left and right edges
+    safe_left = page_w * 0.10
+    safe_right = page_w * 0.90
+    safe_area_width = safe_right - safe_left  # 80% of page width
 
-    if text_width > max_allowed_width:
-        scale_factor = max_allowed_width / text_width
+    # Calculate intended X position first (before any scaling)
+    centered_x = (page_w - text_width) / 2
+    intended_x = override_x if override_x is not None else centered_x
+
+    # Calculate where text would end up
+    text_left = intended_x
+    text_right = intended_x + text_width
+
+    # Only scale down if text actually overflows the safe area
+    if text_left < safe_left or text_right > safe_right:
+        print(f"[DEBUG] Text overflows safe area: left={text_left:.0f} (safe={safe_left:.0f}), right={text_right:.0f} (safe={safe_right:.0f})")
+
+        # Calculate scale factor to fit text within safe area
+        # For centered text, max width is safe_area_width
+        # For non-centered text, calculate based on available space
+        if override_x is None:
+            # Centered text - scale to fit within safe area width
+            scale_factor = safe_area_width / text_width
+        else:
+            # Non-centered text - calculate available space from position to safe boundary
+            available_width = safe_right - intended_x
+            if intended_x < safe_left:
+                # Text starts before safe area, need to fit entirely in safe area
+                available_width = safe_area_width
+            scale_factor = available_width / text_width
+
         font_px = int(font_px * scale_factor)
-        font = load_font(font_family, font_px, font_style, font_weight)
+        font, simulate_bold = load_font(font_family, font_px, font_style, font_weight)
+        stroke_width = max(1, font_px // 50) if simulate_bold else 0
         try:
             text_bbox = draw.textbbox((0, 0), content, font=font)
             text_width = text_bbox[2] - text_bbox[0]
         except:
             text_width = font.getsize(content)[0] if hasattr(font, 'getsize') else len(content) * font_px * 0.6
 
-    # Calculate centered X position
-    centered_x = (page_w - text_width) / 2
+        # Recalculate centered position with new text width
+        centered_x = (page_w - text_width) / 2
+    else:
+        print(f"[DEBUG] Text fits in safe area: left={text_left:.0f} (safe={safe_left:.0f}), right={text_right:.0f} (safe={safe_right:.0f})")
+
+    # Calculate final X position
     x = override_x if override_x is not None else centered_x
 
     print(f"[DEBUG] Drawing text at ({x:.0f}, {y:.0f}), width: {text_width:.0f}px")
@@ -419,7 +470,11 @@ def draw_text(
         emoji_scale = 1.0  # Emoji size matches text height (pilmoji handles scaling internally)
         draw_text_with_emoji(canvas, (int(x), int(y)), content, color, font, emoji_scale)
     else:
-        draw.text((x, y), content, fill=color, font=font)
+        # Use stroke to simulate bold if bold font variant wasn't available
+        if stroke_width > 0:
+            draw.text((x, y), content, fill=color, font=font, stroke_width=stroke_width, stroke_fill=color)
+        else:
+            draw.text((x, y), content, fill=color, font=font)
 
 # =========================
 # ENHANCED IMAGE INTEGRATION
