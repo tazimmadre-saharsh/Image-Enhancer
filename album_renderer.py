@@ -345,7 +345,7 @@ def load_font(family: str, size: int, style: str = "normal", weight: str = "norm
     ]
     font_attempts.extend(system_font_paths)
 
-    # 3. Try generic font names as fallback
+    # 3. Try generic font names as fallback from system
     fallback_fonts = ["Arial", "Helvetica", "DejaVuSans", "FreeSans"]
     for fb_font in fallback_fonts:
         font_attempts.extend([
@@ -361,10 +361,34 @@ def load_font(family: str, size: int, style: str = "normal", weight: str = "norm
         except (OSError, IOError):
             continue
 
-    # Last resort: return a default font at the requested size (better than tiny bitmap)
-    # Create a simple scalable default
+    # 4. Last resort: use bundled fallback fonts from our fonts directory
+    # These are guaranteed to exist and are scalable TrueType fonts
+    # Arial is first as it's the client's default font
+    bundled_fallbacks = ["Arial", "Roboto", "OpenSans", "Lato", "Montserrat"]
+    if FONTS_DIR.exists():
+        for fallback_name in bundled_fallbacks:
+            # Try with style suffix
+            if is_bold and is_italic:
+                suffixes = ["-BoldItalic", "-Bold", "-Regular", ""]
+            elif is_bold:
+                suffixes = ["-Bold", "-Regular", ""]
+            elif is_italic:
+                suffixes = ["-Italic", "-Regular", ""]
+            else:
+                suffixes = ["-Regular", ""]
+
+            for suffix in suffixes:
+                fallback_path = FONTS_DIR / f"{fallback_name}{suffix}.ttf"
+                if fallback_path.exists():
+                    try:
+                        print(f"[DEBUG] Using bundled fallback font: {fallback_path}")
+                        return (ImageFont.truetype(str(fallback_path), size), bold_requested_but_not_found)
+                    except (OSError, IOError):
+                        continue
+
+    # Absolute last resort: PIL's default (bitmap font - not ideal)
+    print(f"[WARNING] No scalable font found, using PIL default bitmap font")
     try:
-        # Try to use PIL's default as TrueType if possible
         return (ImageFont.load_default(), bold_requested_but_not_found)
     except:
         return (ImageFont.load_default(), bold_requested_but_not_found)
