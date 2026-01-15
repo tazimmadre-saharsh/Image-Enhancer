@@ -680,7 +680,7 @@ async def process_order_background(order_id: str, env: Optional[str] = None):
             print(f"\n📋 Processing order item: {item_id}")
 
             # Update status to in_progress before starting
-            # await update_order_item_in_progress(item_id, config)
+            await update_order_item_in_progress(item_id, config)
 
             # Get dimensions from templateVariant
             dims = get_dimensions_from_order_item(item)
@@ -691,7 +691,7 @@ async def process_order_background(order_id: str, env: Optional[str] = None):
 
             if not album_data["data"]["pages"]:
                 error_msg = "No pages found in designSnapshot"
-                # await update_order_item_failed(item_id, error_msg, config)
+                await update_order_item_failed(item_id, error_msg, config)
                 print(f"❌ {error_msg}")
                 continue
 
@@ -714,31 +714,31 @@ async def process_order_background(order_id: str, env: Optional[str] = None):
 
                 # Upload all pages to S3
                 print(f"📤 Uploading pages to S3 bucket: {config['s3_bucket']}...")
-                # uploaded_pages = await upload_pages_to_s3(
-                #     pages=pages,
-                #     output_dir=output_dir,
-                #     order_id=order_id,
-                #     item_id=item_id,
-                #     s3_bucket=config['s3_bucket']
-                # )
+                uploaded_pages = await upload_pages_to_s3(
+                    pages=pages,
+                    output_dir=output_dir,
+                    order_id=order_id,
+                    item_id=item_id,
+                    s3_bucket=config['s3_bucket']
+                )
 
                 # # # Sort by page number
-                # uploaded_pages.sort(key=lambda x: x.get("pageNumber", 0))
+                uploaded_pages.sort(key=lambda x: x.get("pageNumber", 0))
 
                 # Update status to completed with S3 URLs
-                # await update_order_item_completed(item_id, uploaded_pages, config)
-                # print(f"✅ Order item {item_id} completed with {len(uploaded_pages)} pages uploaded to S3")
+                await update_order_item_completed(item_id, uploaded_pages, config)
+                print(f"✅ Order item {item_id} completed with {len(uploaded_pages)} pages uploaded to S3")
 
                 # Clean up local output folder after successful upload
-                # try:
-                #     shutil.rmtree(output_dir)
-                #     print(f"🗑️ Cleaned up local output folder: {output_dir}")
-                # except Exception as cleanup_error:
-                #     print(f"⚠️ Failed to clean up output folder: {cleanup_error}")
+                try:
+                    shutil.rmtree(output_dir)
+                    print(f"🗑️ Cleaned up local output folder: {output_dir}")
+                except Exception as cleanup_error:
+                    print(f"⚠️ Failed to clean up output folder: {cleanup_error}")
 
             except Exception as item_error:
                 error_msg = str(item_error)
-                # await update_order_item_failed(item_id, error_msg, config)
+                await update_order_item_failed(item_id, error_msg, config)
                 print(f"❌ Order item {item_id} failed: {error_msg}")
 
         print(f"\n🎉 Background processing completed for order: {order_id}")
