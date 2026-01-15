@@ -29,7 +29,8 @@ from emoji_text_renderer import contains_emoji, draw_text_with_emoji
 # =========================
 DESIGN_REF_WIDTH = 800
 DESIGN_REF_HEIGHT = 600
-DPI = 300  # Print quality DPI
+MAX_DPI = 300  # Maximum allowed DPI (capped since downsizing is not supported)
+DEFAULT_DPI = 300  # Default DPI when no enhanced images are available
 JPEG_QUALITY = 98  # Maximum quality JPEG for print (0-100)
 
 # Default layouts path
@@ -506,25 +507,88 @@ def draw_text(
 
 class EnhancedImageManager:
     """Manages enhanced images and provides fallback to original images."""
-    
+
     def __init__(self, enhanced_dir: Optional[Path] = None):
         self.enhanced_dir = enhanced_dir
         self.enhanced_images_cache: Dict[str, str] = {}
-        
+        self._min_dpi: Optional[int] = None  # Track minimum DPI across enhanced images
+        self._per_image_dpi: Dict[str, Optional[int]] = {}  # Track DPI per image
+        self._icc_profile: Optional[bytes] = None  # Store ICC profile from enhanced images
+
         if enhanced_dir and enhanced_dir.exists():
             self._build_enhanced_cache()
-    
+
     def _build_enhanced_cache(self):
-        """Build cache of enhanced image paths by imageId."""
+        """Build cache of enhanced image paths by imageId and determine minimum DPI."""
         if not self.enhanced_dir or not self.enhanced_dir.exists():
             return
-        
+
+        dpi_values = []
         for img_file in self.enhanced_dir.glob("*.jpg"):
             # Enhanced images are named as: {imageId}_page{pageNo:02d}.jpg
             if "_page" in img_file.stem:
                 image_id = img_file.stem.split("_page")[0]
                 self.enhanced_images_cache[image_id] = str(img_file)
-    
+
+                # Read DPI and ICC profile from image metadata
+                try:
+                    with Image.open(img_file) as img:
+                        dpi = img.info.get("dpi")
+                        if dpi:
+                            # DPI is a tuple (x_dpi, y_dpi), take the first value
+                            img_dpi = int(dpi[0]) if isinstance(dpi, tuple) else int(dpi)
+                            dpi_values.append(img_dpi)
+                            self._per_image_dpi[image_id] = img_dpi
+                        else:
+                            # TOO_SMALL images have no DPI metadata - skip for DPI calculation
+                            # (they're still usable, just at lower quality)
+                            self._per_image_dpi[image_id] = None
+                            print(f"Info: {img_file.name} has no DPI metadata (likely TOO_SMALL)")
+
+                        # Extract ICC profile from first image that has one
+                        if self._icc_profile is None:
+                            icc = img.info.get("icc_profile")
+                            if icc:
+                                self._icc_profile = icc
+                except Exception as e:
+                    self._per_image_dpi[image_id] = None
+                    print(f"Warning: Could not read metadata from {img_file}: {e}")
+
+        # Set minimum DPI (capped at MAX_DPI)
+        if dpi_values:
+            self._min_dpi = min(min(dpi_values), MAX_DPI)
+
+    def get_dpi(self) -> int:
+        """Get the DPI to use for rendering, based on enhanced images (capped at MAX_DPI)."""
+        if self._min_dpi is not None:
+            return self._min_dpi
+        return DEFAULT_DPI
+
+    def get_image_dpi(self, image_id: str) -> Optional[int]:
+        """Get DPI for a specific image, or None if TOO_SMALL/unknown."""
+        return self._per_image_dpi.get(image_id)
+
+    def get_page_dpi(self, image_ids: List[str]) -> int:
+        """
+        Get the DPI to use for a specific page based on images on that page.
+
+        Returns the minimum DPI among the provided image IDs (capped at MAX_DPI).
+        If no valid DPIs found, returns DEFAULT_DPI.
+        """
+        page_dpis = []
+        for image_id in image_ids:
+            img_dpi = self._per_image_dpi.get(image_id)
+            if img_dpi is not None:  # Skip TOO_SMALL images (None)
+                page_dpis.append(img_dpi)
+
+        if page_dpis:
+            return min(min(page_dpis), MAX_DPI)
+        return DEFAULT_DPI
+
+    def get_icc_profile(self) -> Optional[bytes]:
+        """Get the ICC profile extracted from enhanced images."""
+        return self._icc_profile
+
     def get_image(self, image_id: str, original_url: Optional[str] = None) -> Image.Image:
         """Get enhanced image if available, fallback to original."""
         # Try enhanced image first
@@ -548,13 +612,36 @@ class EnhancedImageManager:
 # RENDER PAGE
 # =========================
 
+def get_page_image_ids(page: AlbumPage, layouts_by_id: Dict[str, LayoutDef]) -> List[str]:
+    """Extract all image IDs used on a page (background + layout elements)."""
+    image_ids = []
+
+    # Background image ID
+    bg_image_id = page.backgroundImageId or (page.backgroundImage and page.backgroundImage.get("imageId"))
+    if bg_image_id:
+        image_ids.append(bg_image_id)
+
+    # Layout element image IDs
+    if page.layoutId and page.layoutId in layouts_by_id:
+        layout = layouts_by_id[page.layoutId]
+        elements = page.elements or []
+        for zone in layout.zones:
+            elem = next((e for e in elements if e.get("zoneId") == zone.id), None)
+            if elem and elem.get("imageId"):
+                image_ids.append(elem["imageId"])
+
+    return image_ids
+
+
 async def render_page(
     page: AlbumPage,
     page_width: int,
     page_height: int,
     layouts_by_id: Dict[str, LayoutDef],
     album: AlbumData,
-    enhanced_manager: Optional[EnhancedImageManager] = None
+    enhanced_manager: Optional[EnhancedImageManager] = None,
+    icc_profile: Optional[bytes] = None,
+    dpi: int = DEFAULT_DPI
 ) -> bytes:
     """Render a single page to JPEG buffer."""
     
@@ -578,12 +665,23 @@ async def render_page(
     
     if bg_url:
         try:
-            if enhanced_manager:
-                bg_image_id = page.backgroundImageId or (page.backgroundImage and page.backgroundImage.get("imageId"))
-                bg_img = enhanced_manager.get_image(bg_image_id, bg_url) if bg_image_id else load_remote_image(bg_url)
+            bg_image_id = page.backgroundImageId or (page.backgroundImage and page.backgroundImage.get("imageId"))
+            if enhanced_manager and bg_image_id:
+                bg_img = enhanced_manager.get_image(bg_image_id, bg_url)
+                bg_dpi = enhanced_manager.get_image_dpi(bg_image_id)
+                is_enhanced = bg_image_id in enhanced_manager.enhanced_images_cache
+                if is_enhanced:
+                    dpi_str = f"{bg_dpi} DPI" if bg_dpi else "TOO_SMALL (no DPI)"
+                    print(f"  🖼️ Background {bg_image_id}: Enhanced, {dpi_str}")
+                else:
+                    print(f"  🖼️ Background {bg_image_id}: Original (no enhanced version)")
             else:
                 bg_img = load_remote_image(bg_url)
-            
+                if bg_image_id:
+                    print(f"  🖼️ Background {bg_image_id}: Original (enhancement disabled)")
+                else:
+                    print(f"  🖼️ Background: Original (URL only)")
+
             # Apply background image with transforms (matching TypeScript lines 403-435)
             bg_transform = page.backgroundImage.get("transform", {}) if page.backgroundImage else {}
             fit_mode = bg_transform.get("fitMode", "cover")
@@ -671,14 +769,23 @@ async def render_page(
             
             try:
                 # Use enhanced image if available, fallback to original
+                image_id = elem["imageId"]
                 if enhanced_manager:
-                    img = enhanced_manager.get_image(elem["imageId"], original_url)
+                    img = enhanced_manager.get_image(image_id, original_url)
+                    img_dpi = enhanced_manager.get_image_dpi(image_id)
+                    is_enhanced = image_id in enhanced_manager.enhanced_images_cache
+                    if is_enhanced:
+                        dpi_str = f"{img_dpi} DPI" if img_dpi else "TOO_SMALL (no DPI)"
+                        print(f"  📷 Image {image_id}: Enhanced, {dpi_str}")
+                    else:
+                        print(f"  📷 Image {image_id}: Original (no enhanced version)")
                 else:
                     img = load_remote_image(original_url) if original_url else None
-                
+                    print(f"  📷 Image {image_id}: Original (enhancement disabled)")
+
                 if not img:
                     continue
-                
+
                 # Calculate zone positions
                 zone_x = pct_x(page_width, zone.position["x"])
                 zone_y = pct_y(page_height, zone.position["y"])
@@ -838,16 +945,21 @@ async def render_page(
     
     # Convert to JPEG with metadata
     output_buffer = io.BytesIO()
-    
-    # Set DPI metadata
-    canvas.save(
-        output_buffer,
-        format="JPEG",
-        quality=JPEG_QUALITY,
-        dpi=(DPI, DPI),
-        optimize=True
-    )
-    
+
+    # Build save kwargs with DPI and ICC profile
+    save_kwargs = {
+        "format": "JPEG",
+        "quality": JPEG_QUALITY,
+        "dpi": (dpi, dpi),
+        "optimize": True
+    }
+
+    # Include ICC profile to preserve color vibrancy
+    if icc_profile:
+        save_kwargs["icc_profile"] = icc_profile
+
+    canvas.save(output_buffer, **save_kwargs)
+
     return output_buffer.getvalue()
 
 # =========================
@@ -891,12 +1003,10 @@ class AlbumRenderer:
         """Render all pages of an album."""
         output_path = Path(output_dir)
         output_path.mkdir(parents=True, exist_ok=True)
-        
-        # Parse page size
+
+        # Parse page size (dimensions calculated per-page based on image DPIs)
         page_w_in, page_h_in = [float(x) for x in page_size.lower().split("x")]
-        page_width = int(page_w_in * DPI)
-        page_height = int(page_h_in * DPI)
-        
+
         # Convert data to structured format (supports both old and new API structures)
         album_images = [
             AlbumImage(
@@ -923,39 +1033,56 @@ class AlbumRenderer:
         ]
         
         album = AlbumData(pages=album_pages, project_images=album_images)
-        
+
         rendered_pages = []
-        
+
+        # Get ICC profile from enhanced images to preserve color vibrancy
+        icc_profile = self.enhanced_manager.get_icc_profile() if self.enhanced_manager else None
+
         for page in album.pages:
             try:
+                # Calculate per-page DPI based on images on this page
+                if self.enhanced_manager and use_enhanced:
+                    page_image_ids = get_page_image_ids(page, self.layouts_by_id)
+                    page_dpi = self.enhanced_manager.get_page_dpi(page_image_ids)
+                else:
+                    page_dpi = DEFAULT_DPI
+
+                # Calculate page dimensions based on this page's DPI
+                page_width = int(page_w_in * page_dpi)
+                page_height = int(page_h_in * page_dpi)
+                print(f"📐 Page {page.pageNumber}: Using {page_dpi} DPI ({page_width}x{page_height} px)")
+
                 buffer = await render_page(
                     page,
                     page_width,
                     page_height,
                     self.layouts_by_id,
                     album,
-                    self.enhanced_manager if use_enhanced else None
+                    self.enhanced_manager if use_enhanced else None,
+                    icc_profile=icc_profile,
+                    dpi=page_dpi
                 )
-                
+
                 # Save rendered page
                 page_filename = f"page_{page.pageNumber:02d}.jpg"
                 page_path = output_path / page_filename
-                
+
                 with open(page_path, "wb") as f:
                     f.write(buffer)
-                
+
                 rendered_pages.append(RenderedPage(
                     pageNumber=page.pageNumber,
                     pageType=page.pageType,
                     buffer=buffer
                 ))
-                
+
                 print(f"✅ Rendered page {page.pageNumber}")
-                
+
             except Exception as e:
                 print(f"❌ Failed to render page {page.pageNumber}: {e}")
                 continue
-        
+
         return rendered_pages
     
     async def render_album_from_files(
@@ -1030,16 +1157,7 @@ class AlbumRenderer:
         output_path = Path(output_dir)
         output_path.mkdir(parents=True, exist_ok=True)
 
-        # Calculate pixel dimensions for both sizes
-        inner_w_px = int(dimensions.get("inner_width", 9.0) * DPI)
-        inner_h_px = int(dimensions.get("inner_height", 9.0) * DPI)
-        cover_w_px = int(dimensions.get("cover_width", 10.0) * DPI)
-        cover_h_px = int(dimensions.get("cover_height", 10.0) * DPI)
-
-        print(f"📐 Inner page size: {dimensions.get('inner_width')}x{dimensions.get('inner_height')} inches ({inner_w_px}x{inner_h_px} px)")
-        print(f"📐 Cover page size: {dimensions.get('cover_width')}x{dimensions.get('cover_height')} inches ({cover_w_px}x{cover_h_px} px)")
-
-        # Auto-enhance if requested
+        # Auto-enhance if requested (do this first to build DPI cache)
         if auto_enhance:
             print("🔄 Generating enhanced images...")
             enhanced_dir = await self._enhance_with_dimensions(
@@ -1047,6 +1165,12 @@ class AlbumRenderer:
             )
             self.enhanced_manager = EnhancedImageManager(enhanced_dir)
             print(f"✅ Enhanced images generated in: {enhanced_dir}")
+
+        # Store dimension inches for per-page DPI calculation
+        inner_w_in = dimensions.get("inner_width", 9.0)
+        inner_h_in = dimensions.get("inner_height", 9.0)
+        cover_w_in = dimensions.get("cover_width", 10.0)
+        cover_h_in = dimensions.get("cover_height", 10.0)
 
         # Convert data to structured format (supports both old and new API structures)
         data = album_data.get("data", album_data)
@@ -1079,15 +1203,29 @@ class AlbumRenderer:
         rendered_pages = []
         print("🎨 Rendering album pages...")
 
+        # Get ICC profile from enhanced images to preserve color vibrancy
+        icc_profile = self.enhanced_manager.get_icc_profile() if self.enhanced_manager else None
+
         for page in album.pages:
             try:
-                # Determine dimensions based on page type
+                # Calculate per-page DPI based on images on this page
+                if self.enhanced_manager:
+                    page_image_ids = get_page_image_ids(page, self.layouts_by_id)
+                    page_dpi = self.enhanced_manager.get_page_dpi(page_image_ids)
+                else:
+                    page_dpi = DEFAULT_DPI
+
+                # Determine dimensions based on page type, using per-page DPI
                 if page.pageType in ("cover-front", "cover-back"):
-                    page_width, page_height = cover_w_px, cover_h_px
+                    page_width = int(cover_w_in * page_dpi)
+                    page_height = int(cover_h_in * page_dpi)
                     page_type_label = "cover"
                 else:
-                    page_width, page_height = inner_w_px, inner_h_px
+                    page_width = int(inner_w_in * page_dpi)
+                    page_height = int(inner_h_in * page_dpi)
                     page_type_label = "inner"
+
+                print(f"📐 Page {page.pageNumber}: Using {page_dpi} DPI ({page_width}x{page_height} px, {page_type_label})")
 
                 # Render page
                 buffer = await render_page(
@@ -1096,7 +1234,9 @@ class AlbumRenderer:
                     page_height,
                     self.layouts_by_id,
                     album,
-                    self.enhanced_manager
+                    self.enhanced_manager,
+                    icc_profile=icc_profile,
+                    dpi=page_dpi
                 )
 
                 # Save rendered page
@@ -1112,7 +1252,8 @@ class AlbumRenderer:
                     "filename": page_filename,
                     "width_px": page_width,
                     "height_px": page_height,
-                    "size_type": page_type_label
+                    "size_type": page_type_label,
+                    "dpi": page_dpi
                 })
 
                 print(f"✅ Rendered page {page.pageNumber} ({page_type_label}: {page_width}x{page_height})")

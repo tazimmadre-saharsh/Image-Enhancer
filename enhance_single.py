@@ -60,15 +60,16 @@ def enhance_single_image(
     primary_dpi: int = 300,
     fallback_dpi: int = 240,
     jpeg_quality: int = 95,
-    upscale_if_needed: bool = True,
+    upscale_small: bool = True,
+    downscale_large: bool = True,
     set_dpi_metadata: bool = True,
     denoise_h: int = 3,
     denoise_h_color: int = 3,
-    unsharp_amount_base: float = 0.60,
-    unsharp_sigma: float = 1.10,
+    unsharp_amount_base: float = 0.55,
+    unsharp_sigma: float = 1.2,
     enable_clahe: bool = False,
-    clahe_clip: float = 1.3,
-    clahe_grid: Tuple[int, int] = (8, 8),
+    clahe_clip: float = 2.0,
+    clahe_grid: int = 8,
 ) -> Tuple[Image.Image, int, Dict[str, Any]]:
     """
     Enhance a single image given its URL and the target print short side in inches.
@@ -85,7 +86,8 @@ def enhance_single_image(
             primary_dpi=int(primary_dpi),
             fallback_dpi=int(fallback_dpi),
             jpeg_quality=int(jpeg_quality),
-            upscale_if_needed=bool(upscale_if_needed),
+            upscale_small=bool(upscale_small),
+            downscale_large=bool(downscale_large),
             set_dpi_metadata=bool(set_dpi_metadata),
             denoise_h=int(denoise_h),
             denoise_h_color=int(denoise_h_color),
@@ -93,7 +95,7 @@ def enhance_single_image(
             unsharp_sigma=float(unsharp_sigma),
             enable_clahe=bool(enable_clahe),
             clahe_clip=float(clahe_clip),
-            clahe_grid=tuple(clahe_grid),
+            clahe_grid=int(clahe_grid),
         )
         out_pil, chosen_dpi, meta = enhance_one(pil_img, icc_profile, cfg)
         return out_pil, chosen_dpi, meta

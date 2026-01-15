@@ -94,7 +94,14 @@ class ImageProcessor:
                 'output_filename': output_filename,
                 'source': 'local_file' if image_source else 'url'
             })
-            
+
+            # Warn if image is too small for target DPI
+            if metadata.get('too_small', False):
+                print(f"WARNING: Image {spec.imageId} is too small for target print size "
+                      f"({metadata.get('target_short_in', 'unknown')}in). "
+                      f"Scale needed: 300dpi={metadata.get('scale_300', 0):.2f}x, "
+                      f"240dpi={metadata.get('scale_240', 0):.2f}x")
+
             # Close image if we opened it
             if not image_source:
                 pil_img.close()
