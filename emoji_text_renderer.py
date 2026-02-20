@@ -18,8 +18,14 @@ EMOJI_PATTERN = re.compile(
     "\u2600-\u26FF"          # Misc symbols
     "\u2700-\u27BF"          # Dingbats
     "\u200D"                 # Zero Width Joiner
+    "\uFE0E\uFE0F"           # Variation selectors
     "]+"
 )
+
+# Characters that should be stripped before rendering to avoid broken glyphs
+# Variation selectors (FE0E = text presentation, FE0F = emoji presentation)
+# These are invisible modifiers that fonts often lack glyphs for
+INVISIBLE_CHARS_TO_STRIP = re.compile("[\uFE0E\uFE0F]")
 
 
 def contains_emoji(text: str) -> bool:
@@ -51,10 +57,13 @@ def draw_text_with_emoji(
         font: PIL ImageFont to use for text
         emoji_scale_factor: Scale factor for emoji size (default 1.0)
     """
+    # Strip variation selectors that pilmoji doesn't consume,
+    # which would otherwise render as broken box glyphs
+    cleaned_text = INVISIBLE_CHARS_TO_STRIP.sub("", text)
     with Pilmoji(canvas, source=Twemoji) as pilmoji:
         pilmoji.text(
             position,
-            text,
+            cleaned_text,
             fill=hex_to_rgb(fill),
             font=font,
             emoji_scale_factor=emoji_scale_factor
