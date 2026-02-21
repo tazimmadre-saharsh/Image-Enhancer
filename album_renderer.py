@@ -36,6 +36,7 @@ JPEG_QUALITY = 98  # Maximum quality JPEG for print (0-100)
 # Default layouts path
 LAYOUTS_PATH = Path(__file__).parent / "layouts.json"
 FONTS_DIR = Path(__file__).parent / "fonts"
+ASSETS_DIR = Path(__file__).parent / "assets"
 
 # =========================
 # FONT CONFIGURATION
@@ -144,6 +145,7 @@ class AlbumPage:
     backgroundImageId: Optional[str] = None
     elements: Optional[List[Dict[str, Any]]] = None
     textElements: Optional[List[Dict[str, Any]]] = None
+    backCoverLogoUrl: Optional[str] = None
 
 @dataclass
 class AlbumData:
@@ -942,7 +944,40 @@ async def render_page(
         draw = ImageDraw.Draw(canvas)
         for text_elem in page.textElements:
             draw_text(draw, text_elem, page_width, page_height)
-    
+
+    # 4) Back cover logo (only if no background image on back cover)
+    has_back_cover_bg = page.pageType == "cover-back" and (page.backgroundImageUrl or page.backgroundImage or page.backgroundImageId)
+    if page.pageType == "cover-back" and page.backCoverLogoUrl and not has_back_cover_bg:
+        try:
+            # Resolve logo: load from local assets based on the relative URL path
+            logo_filename = Path(page.backCoverLogoUrl).name  # e.g. "light-back-cover-logo.png"
+            local_logo_path = ASSETS_DIR / "back-cover-logo" / logo_filename
+            if local_logo_path.exists():
+                logo_img = Image.open(local_logo_path)
+            else:
+                logo_img = load_remote_image(page.backCoverLogoUrl)
+
+            # Size logo to full page (logo is full-page with transparent background)
+            fitted = get_fitted_rect(logo_img.width, logo_img.height, page_width, page_height, "contain")
+            logo_resized = logo_img.resize(
+                (int(fitted["width"]), int(fitted["height"])),
+                Image.Resampling.LANCZOS
+            )
+
+            # Center on page
+            logo_x = int((page_width - fitted["width"]) / 2)
+            logo_y = int((page_height - fitted["height"]) / 2)
+
+            # Alpha-composite for transparent PNG logos
+            canvas_rgba = canvas.convert("RGBA")
+            logo_rgba = logo_resized.convert("RGBA")
+            canvas_rgba.paste(logo_rgba, (logo_x, logo_y), logo_rgba)
+            canvas = canvas_rgba.convert("RGB")
+
+            print(f"  🏷️ Back cover logo rendered: {logo_filename}")
+        except Exception as e:
+            print(f"  ⚠️ Failed to render back cover logo: {e}")
+
     # Convert to JPEG with metadata
     output_buffer = io.BytesIO()
 
@@ -1027,11 +1062,12 @@ class AlbumRenderer:
                 backgroundImage=page.get("backgroundImage"),
                 backgroundImageId=page.get("backgroundImageId"),
                 elements=page.get("elements"),
-                textElements=page.get("textElements")
+                textElements=page.get("textElements"),
+                backCoverLogoUrl=page.get("backCoverLogoUrl")
             )
             for page in album_data.get("data", {}).get("pages", [])
         ]
-        
+
         album = AlbumData(pages=album_pages, project_images=album_images)
 
         rendered_pages = []
@@ -1193,7 +1229,8 @@ class AlbumRenderer:
                 backgroundImage=page.get("backgroundImage"),
                 backgroundImageId=page.get("backgroundImageId"),
                 elements=page.get("elements"),
-                textElements=page.get("textElements")
+                textElements=page.get("textElements"),
+                backCoverLogoUrl=page.get("backCoverLogoUrl")
             )
             for page in data.get("pages", [])
         ]

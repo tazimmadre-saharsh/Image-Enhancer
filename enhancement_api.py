@@ -725,7 +725,7 @@ async def process_order_background(order_id: str, env: Optional[str] = None):
                 # # # Sort by page number
                 uploaded_pages.sort(key=lambda x: x.get("pageNumber", 0))
 
-                # Update status to completed with S3 URLs
+                # # Update status to completed with S3 URLs
                 await update_order_item_completed(item_id, uploaded_pages, config)
                 print(f"✅ Order item {item_id} completed with {len(uploaded_pages)} pages uploaded to S3")
 
