@@ -389,15 +389,14 @@ def build_album_data_from_item(item: Dict[str, Any]) -> Dict[str, Any]:
     {
         "imageId": "uuid",
         "imageUrl": "https://...",
-        "originalFilename": "...",
         ...
     }
 
     Width/height are no longer provided - they will be fetched from the image URL.
     """
     snapshot = item.get("designSnapshot", {})
-    project = item.get("project", {})
-    project_images = project.get("project_images", [])
+    coverData = snapshot.get("coverData", {})
+    project_images = coverData.get("projectImages", [])
 
     return {
         "data": {
