@@ -53,6 +53,16 @@ def contains_emoji(text: str) -> bool:
     return bool(EMOJI_PATTERN.search(text))
 
 
+def get_text_width_with_emoji(text: str, font: ImageFont.FreeTypeFont, emoji_scale_factor: float = 1.0) -> int:
+    """Get the rendered width of text that contains emoji.
+
+    Uses pilmoji's getsize which accounts for both text glyphs and emoji images.
+    """
+    cleaned_text = INVISIBLE_CHARS_TO_STRIP.sub("", text)
+    w, _ = _pilmoji_helpers.getsize(cleaned_text, font, emoji_scale_factor=emoji_scale_factor)
+    return w
+
+
 def hex_to_rgb(hex_color: str) -> Tuple[int, int, int]:
     """Convert hex color to RGB tuple."""
     hex_color = hex_color.lstrip('#')

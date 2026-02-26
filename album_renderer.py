@@ -22,7 +22,7 @@ import numpy as np
 from photobook_enhancer import PhotoBookEnhancer
 from enhancement_specs import EnhancementSpec, SpecGenerator
 from image_processor import ImageProcessor
-from emoji_text_renderer import contains_emoji, draw_text_with_emoji
+from emoji_text_renderer import contains_emoji, draw_text_with_emoji, get_text_width_with_emoji
 
 # =========================
 # CONSTANTS
@@ -432,12 +432,19 @@ def draw_text(
     stroke_width = max(1, font_px // 50) if simulate_bold else 0
 
     # Check text width and adjust if needed
-    try:
-        text_bbox = draw.textbbox((0, 0), content, font=font)
-        text_width = text_bbox[2] - text_bbox[0]
-    except:
-        # Fallback for older PIL versions
-        text_width = font.getsize(content)[0] if hasattr(font, 'getsize') else len(content) * font_px * 0.6
+    has_emoji = contains_emoji(content)
+    emoji_scale = 0.85  # Scale emojis slightly smaller than font height to match preview appearance
+
+    if has_emoji:
+        # Use emoji-aware width calculation that accounts for emoji image sizes
+        text_width = get_text_width_with_emoji(content, font, emoji_scale)
+    else:
+        try:
+            text_bbox = draw.textbbox((0, 0), content, font=font)
+            text_width = text_bbox[2] - text_bbox[0]
+        except:
+            # Fallback for older PIL versions
+            text_width = font.getsize(content)[0] if hasattr(font, 'getsize') else len(content) * font_px * 0.6
 
     # Safe area is 10% from left and right edges
     safe_left = page_w * 0.10
@@ -473,11 +480,15 @@ def draw_text(
         font_px = int(font_px * scale_factor)
         font, simulate_bold = load_font(font_family, font_px, font_style, font_weight)
         stroke_width = max(1, font_px // 50) if simulate_bold else 0
-        try:
-            text_bbox = draw.textbbox((0, 0), content, font=font)
-            text_width = text_bbox[2] - text_bbox[0]
-        except:
-            text_width = font.getsize(content)[0] if hasattr(font, 'getsize') else len(content) * font_px * 0.6
+
+        if has_emoji:
+            text_width = get_text_width_with_emoji(content, font, emoji_scale)
+        else:
+            try:
+                text_bbox = draw.textbbox((0, 0), content, font=font)
+                text_width = text_bbox[2] - text_bbox[0]
+            except:
+                text_width = font.getsize(content)[0] if hasattr(font, 'getsize') else len(content) * font_px * 0.6
 
         # Recalculate centered position with new text width
         centered_x = (page_w - text_width) / 2
@@ -492,9 +503,8 @@ def draw_text(
     color = text_elem.get("color", "#000000")
 
     # Draw text (with emoji support if text contains emoji)
-    if contains_emoji(content):
+    if has_emoji:
         canvas = draw._image
-        emoji_scale = 1.0  # Emoji size matches text height (pilmoji handles scaling internally)
         draw_text_with_emoji(canvas, (int(x), int(y)), content, color, font, emoji_scale)
     else:
         # Use stroke to simulate bold if bold font variant wasn't available
