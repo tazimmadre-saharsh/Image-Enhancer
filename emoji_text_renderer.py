@@ -24,17 +24,19 @@ EMOJI_PATTERN = re.compile(
 )
 
 # Patch pilmoji's emoji regex to include newer Unicode emoji ranges
-# (e.g. Emoji 15.0+ like 🩵 U+1FA75) that the old emoji library doesn't cover.
-# Build a combined regex: original pilmoji patterns OR our extended ranges.
-# Use a non-capturing group with alternation to avoid matching single ASCII chars.
+# (e.g. Emoji 15.0+ like 🩵 U+1FA75) that the old emoji library doesn't cover,
+# and also bare emoji codepoints (e.g. ❤ U+2764 without FE0F variation selector)
+# that the old emoji library only recognizes with the variation selector attached.
 _EXTENDED_EMOJI_PATTERN = (
     "["
     "\U0001FA70-\U0001FAFF"  # Extended-A (includes 🩵 U+1FA75 and other Emoji 15.0+)
-    "\U0001F900-\U0001F9FF"  # Supplemental Symbols (catch any gaps)
+    "\U0001F900-\U0001F9FF"  # Supplemental Symbols
     "\U0001F600-\U0001F64F"  # Emoticons
     "\U0001F300-\U0001F5FF"  # Symbols & Pictographs
     "\U0001F680-\U0001F6FF"  # Transport
     "\U0001F1E0-\U0001F1FF"  # Flags
+    "\u2600-\u26FF"          # Misc symbols (❤ U+2764, ☀ U+2600, etc.)
+    "\u2700-\u27BF"          # Dingbats (✂ U+2702, etc.)
     "]"
 )
 _original_pattern = _pilmoji_helpers.EMOJI_REGEX.pattern
@@ -42,10 +44,12 @@ _pilmoji_helpers.EMOJI_REGEX = re.compile(
     f'({_original_pattern[1:-1]}|{_EXTENDED_EMOJI_PATTERN})'
 )
 
-# Characters that should be stripped before rendering to avoid broken glyphs
 # Variation selectors (FE0E = text presentation, FE0F = emoji presentation)
-# These are invisible modifiers that fonts often lack glyphs for
-INVISIBLE_CHARS_TO_STRIP = re.compile("[\uFE0E\uFE0F]")
+# These are stripped only from characters that won't be rendered as emoji,
+# to avoid broken box glyphs from fonts that lack these invisible glyphs.
+# NOTE: We do NOT strip them before passing to pilmoji, since pilmoji needs
+# FE0F to match emoji sequences like ❤️ (U+2764 + U+FE0F).
+VARIATION_SELECTORS = re.compile("[\uFE0E\uFE0F]")
 
 
 def contains_emoji(text: str) -> bool:
@@ -58,8 +62,7 @@ def get_text_width_with_emoji(text: str, font: ImageFont.FreeTypeFont, emoji_sca
 
     Uses pilmoji's getsize which accounts for both text glyphs and emoji images.
     """
-    cleaned_text = INVISIBLE_CHARS_TO_STRIP.sub("", text)
-    w, _ = _pilmoji_helpers.getsize(cleaned_text, font, emoji_scale_factor=emoji_scale_factor)
+    w, _ = _pilmoji_helpers.getsize(text, font, emoji_scale_factor=emoji_scale_factor)
     return w
 
 
@@ -87,13 +90,10 @@ def draw_text_with_emoji(
         font: PIL ImageFont to use for text
         emoji_scale_factor: Scale factor for emoji size (default 1.0)
     """
-    # Strip variation selectors that pilmoji doesn't consume,
-    # which would otherwise render as broken box glyphs
-    cleaned_text = INVISIBLE_CHARS_TO_STRIP.sub("", text)
     with Pilmoji(canvas, source=Twemoji) as pilmoji:
         pilmoji.text(
             position,
-            cleaned_text,
+            text,
             fill=hex_to_rgb(fill),
             font=font,
             emoji_scale_factor=emoji_scale_factor
