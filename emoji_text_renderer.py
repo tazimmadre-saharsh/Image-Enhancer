@@ -72,6 +72,25 @@ def hex_to_rgb(hex_color: str) -> Tuple[int, int, int]:
     return tuple(int(hex_color[i:i+2], 16) for i in (0, 2, 4))
 
 
+def _get_emoji_y_offset(font: ImageFont.FreeTypeFont, emoji_scale_factor: float) -> int:
+    """Calculate vertical offset to center emoji with the text's cap height.
+
+    Pilmoji pastes emoji at the text origin y, but the visible text (capital
+    letters) sits lower due to font metrics. This calculates how many pixels
+    to shift the emoji down so it visually centers with the text.
+    """
+    from PIL import Image as _Img, ImageDraw as _IDraw
+    _tmp = _Img.new("L", (1, 1))
+    _draw = _IDraw.Draw(_tmp)
+    bbox = _draw.textbbox((0, 0), "H", font=font)
+    cap_top = bbox[1]
+    cap_bottom = bbox[3]
+    cap_height = cap_bottom - cap_top
+    emoji_height = int(emoji_scale_factor * font.size)
+    # Center the emoji vertically within the cap-height region
+    return cap_top + (cap_height - emoji_height) // 2
+
+
 def draw_text_with_emoji(
     canvas: Image.Image,
     position: Tuple[int, int],
@@ -90,11 +109,13 @@ def draw_text_with_emoji(
         font: PIL ImageFont to use for text
         emoji_scale_factor: Scale factor for emoji size (default 1.0)
     """
+    oy = _get_emoji_y_offset(font, emoji_scale_factor)
     with Pilmoji(canvas, source=Twemoji) as pilmoji:
         pilmoji.text(
             position,
             text,
             fill=hex_to_rgb(fill),
             font=font,
-            emoji_scale_factor=emoji_scale_factor
+            emoji_scale_factor=emoji_scale_factor,
+            emoji_position_offset=(0, oy)
         )
