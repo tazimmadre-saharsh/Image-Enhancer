@@ -15,7 +15,12 @@ from pathlib import Path
 from typing import Dict, Any, List, Optional, Tuple, Union
 from dataclasses import dataclass
 import requests
-from PIL import Image, ImageDraw, ImageFont, ImageOps, ImageFilter, ImageChops
+from PIL import Image, ImageDraw, ImageFont, ImageOps, ImageFilter, ImageChops, ImageFile
+
+# Allow PIL to load truncated/slightly corrupt images instead of raising an error.
+# This prevents missing images on rendered pages when the source JPEG is only
+# partially downloaded or has a few trailing bytes missing.
+ImageFile.LOAD_TRUNCATED_IMAGES = True
 import cv2
 import numpy as np
 
@@ -756,7 +761,8 @@ async def render_page(
             canvas = canvas_rgba.convert("RGB")
             
         except Exception as e:
-            print(f"Failed to load background image: {e}")
+            print(f"⚠️ WARNING: Failed to load background image for page {page.pageNumber} "
+                  f"(type={page.pageType}): {e}")
     
     # 2) Layout zones with enhanced images
     layout = layouts_by_id.get(page.layoutId) if page.layoutId else None
@@ -945,7 +951,8 @@ async def render_page(
                 canvas = canvas.convert("RGB")
                 
             except Exception as e:
-                print(f"Failed to process image {elem['imageId']}: {e}")
+                print(f"⚠️ WARNING: Failed to process image {elem['imageId']} on page {page.pageNumber} "
+                      f"(type={page.pageType}, zone={zone.id}): {e}")
                 continue
     
     # 3) Text elements
