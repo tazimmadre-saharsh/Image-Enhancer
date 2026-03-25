@@ -1,637 +1,948 @@
 [
-    {
-        "id": "blank-page",
-        "name": "Blank Page",
-        "category": "blank",
-        "thumbnail": "",
-        "zones": []
+  {
+    "id": "blank-page",
+    "name": "Blank Page",
+    "category": "blank",
+    "thumbnail": "",
+    "zones": []
+  },
+  {
+    "id": "single-full",
+    "name": "Full Page",
+    "category": "single",
+    "thumbnail": "",
+    "captionVariantId": "single-full-caption",
+    "zones": [
+      {
+        "id": "zone-1",
+        "position": { "x": 0, "y": 0 },
+        "size": { "width": 100, "height": 100 }
+      }
+    ]
+  },
+  {
+    "id": "single-centered",
+    "name": "Centered",
+    "category": "single",
+    "thumbnail": "",
+    "captionVariantId": "single-centered-caption",
+    "zones": [
+      {
+        "id": "zone-1",
+        "position": { "x": 10, "y": 10 },
+        "size": { "width": 80, "height": 80 }
+      }
+    ]
+  },
+  {
+    "id": "single-bottom",
+    "name": "Bottom",
+    "category": "single",
+    "thumbnail": "",
+    "zones": [
+      {
+        "id": "zone-1",
+        "position": {
+          "x": 10,
+          "y": 35
+        },
+        "size": {
+          "width": 80,
+          "height": 60
+        }
+      }
+    ]
+  },
+  {
+    "id": "collage-2img-sidebyside",
+    "name": "Side by Side",
+    "category": "double",
+    "thumbnail": "",
+    "captionVariantId": "collage-2img-sidebyside-caption",
+    "zones": [
+      {
+        "id": "zone-1",
+        "position": {
+          "x": 5,
+          "y": 5
+        },
+        "size": {
+          "width": 44,
+          "height": 90
+        }
+      },
+      {
+        "id": "zone-2",
+        "position": {
+          "x": 51,
+          "y": 5
+        },
+        "size": {
+          "width": 44,
+          "height": 90
+        }
+      }
+    ]
+  },
+  {
+    "id": "collage-2img-stacked",
+    "name": "Stacked",
+    "category": "double",
+    "thumbnail": "",
+    "captionVariantId": "collage-2img-stacked-caption",
+    "zones": [
+      {
+        "id": "zone-1",
+        "position": {
+          "x": 5,
+          "y": 5
+        },
+        "size": {
+          "width": 90,
+          "height": 44
+        }
+      },
+      {
+        "id": "zone-2",
+        "position": {
+          "x": 5,
+          "y": 51
+        },
+        "size": {
+          "width": 90,
+          "height": 44
+        }
+      }
+    ]
+  },
+  {
+    "id": "collage-2img-stacked-v2",
+    "name": "Stacked Unequal",
+    "category": "double",
+    "thumbnail": "",
+    "captionVariantId": "collage-2img-stacked-v2-caption",
+    "zones": [
+      {
+        "id": "zone-1",
+        "position": {
+          "x": 5,
+          "y": 5
+        },
+        "size": {
+          "width": 90,
+          "height": 55
+        }
+      },
+      {
+        "id": "zone-2",
+        "position": {
+          "x": 5,
+          "y": 62
+        },
+        "size": {
+          "width": 90,
+          "height": 33
+        }
+      }
+    ]
+  },
+  {
+    "id": "collage-2img-diagonal",
+    "name": "Diagonal",
+    "category": "double",
+    "thumbnail": "",
+    "captionVariantId": "collage-2img-diagonal-caption",
+    "zones": [
+      {
+        "id": "zone-1",
+        "position": {
+          "x": 5,
+          "y": 5
+        },
+        "size": {
+          "width": 44,
+          "height": 44
+        }
+      },
+      {
+        "id": "zone-2",
+        "position": {
+          "x": 51,
+          "y": 51
+        },
+        "size": {
+          "width": 44,
+          "height": 44
+        }
+      }
+    ]
+  },
+  {
+    "id": "collage-3img-1top2bottom",
+    "name": "1 Top + 2 Bottom",
+    "category": "triple",
+    "thumbnail": "",
+    "captionVariantId": "collage-3img-1top2bottom-caption",
+    "zones": [
+      {
+        "id": "zone-1",
+        "position": {
+          "x": 5,
+          "y": 5
+        },
+        "size": {
+          "width": 90,
+          "height": 55
+        }
+      },
+      {
+        "id": "zone-2",
+        "position": {
+          "x": 5,
+          "y": 62
+        },
+        "size": {
+          "width": 44,
+          "height": 33
+        }
+      },
+      {
+        "id": "zone-3",
+        "position": {
+          "x": 51,
+          "y": 62
+        },
+        "size": {
+          "width": 44,
+          "height": 33
+        }
+      }
+    ]
+  },
+  {
+    "id": "collage-3img-2top1bottom",
+    "name": "2 Top + 1 Bottom",
+    "category": "triple",
+    "thumbnail": "",
+    "captionVariantId": "collage-3img-2top1bottom-caption",
+    "zones": [
+      {
+        "id": "zone-1",
+        "position": {
+          "x": 5,
+          "y": 5
+        },
+        "size": {
+          "width": 44,
+          "height": 33
+        }
+      },
+      {
+        "id": "zone-2",
+        "position": {
+          "x": 51,
+          "y": 5
+        },
+        "size": {
+          "width": 44,
+          "height": 33
+        }
+      },
+      {
+        "id": "zone-3",
+        "position": {
+          "x": 5,
+          "y": 40
+        },
+        "size": {
+          "width": 90,
+          "height": 55
+        }
+      }
+    ]
+  },
+  {
+    "id": "collage-4img-grid",
+    "name": "4-Image Grid",
+    "category": "collage",
+    "thumbnail": "",
+    "captionVariantId": "collage-4img-grid-caption",
+    "zones": [
+      {
+        "id": "zone-1",
+        "position": {
+          "x": 5,
+          "y": 5
+        },
+        "size": {
+          "width": 44,
+          "height": 44
+        }
+      },
+      {
+        "id": "zone-2",
+        "position": {
+          "x": 51,
+          "y": 5
+        },
+        "size": {
+          "width": 44,
+          "height": 44
+        }
+      },
+      {
+        "id": "zone-3",
+        "position": {
+          "x": 5,
+          "y": 51
+        },
+        "size": {
+          "width": 44,
+          "height": 44
+        }
+      },
+      {
+        "id": "zone-4",
+        "position": {
+          "x": 51,
+          "y": 51
+        },
+        "size": {
+          "width": 44,
+          "height": 44
+        }
+      }
+    ]
+  },
+  {
+    "id": "collage-4img-staggered-a",
+    "name": "Staggered Grid A",
+    "category": "collage",
+    "thumbnail": "",
+    "captionVariantId": "collage-4img-staggered-a-caption",
+    "zones": [
+      {
+        "id": "zone-1",
+        "position": { "x": 5, "y": 5 },
+        "size": {
+          "width": 44,
+          "height": 33
+        }
+      },
+      {
+        "id": "zone-2",
+        "position": {
+          "x": 51,
+          "y": 5
+        },
+        "size": {
+          "width": 44,
+          "height": 53
+        }
+      },
+      {
+        "id": "zone-3",
+        "position": {
+          "x": 5,
+          "y": 40
+        },
+        "size": {
+          "width": 44,
+          "height": 55
+        }
+      },
+      {
+        "id": "zone-4",
+        "position": {
+          "x": 51,
+          "y": 60
+        },
+        "size": {
+          "width": 44,
+          "height": 35
+        }
+      }
+    ]
+  },
+  {
+    "id": "collage-4img-staggered-b",
+    "name": "Staggered Grid B",
+    "category": "collage",
+    "thumbnail": "",
+    "captionVariantId": "collage-4img-staggered-b-caption",
+    "zones": [
+      {
+        "id": "zone-1",
+        "position": {
+          "x": 5,
+          "y": 5
+        },
+        "size": {
+          "width": 44,
+          "height": 53
+        }
+      },
+      {
+        "id": "zone-2",
+        "position": {
+          "x": 51,
+          "y": 5
+        },
+        "size": {
+          "width": 44,
+          "height": 33
+        }
+      },
+      {
+        "id": "zone-3",
+        "position": {
+          "x": 5,
+          "y": 60
+        },
+        "size": {
+          "width": 44,
+          "height": 35
+        }
+      },
+      {
+        "id": "zone-4",
+        "position": {
+          "x": 51,
+          "y": 40
+        },
+        "size": {
+          "width": 44,
+          "height": 55
+        }
+      }
+    ]
+  },
+  {
+    "id": "single-full-caption",
+    "name": "Full Page + Caption",
+    "category": "single",
+    "thumbnail": "",
+    "hasCaption": true,
+    "captionVariantId": "single-full",
+    "captionZone": {
+      "position": {
+        "x": 50,
+        "y": 75
+      },
+      "size": {
+        "width": 50,
+        "height": 25
+      }
     },
-    {
-        "id": "single-full",
-        "name": "Full Page",
-        "category": "single",
-        "thumbnail": "",
-        "zones": [
-            {
-                "id": "zone-1",
-                "position": {
-                    "x": 0,
-                    "y": 0
-                },
-                "size": {
-                    "width": 100,
-                    "height": 100
-                }
-            }
-        ]
+    "zones": [
+      {
+        "id": "zone-1",
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "size": {
+          "width": 100,
+          "height": 100
+        }
+      }
+    ]
+  },
+  {
+    "id": "single-centered-caption",
+    "name": "Centered + Caption",
+    "category": "single",
+    "thumbnail": "",
+    "hasCaption": true,
+    "captionVariantId": "single-centered",
+    "captionZone": {
+      "position": {
+        "x": 10,
+        "y": 75
+      },
+      "size": {
+        "width": 80,
+        "height": 17
+      }
     },
-    {
-        "id": "single-centered",
-        "name": "Centered",
-        "category": "single",
-        "thumbnail": "",
-        "zones": [
-            {
-                "id": "zone-1",
-                "position": {
-                    "x": 10,
-                    "y": 10
-                },
-                "size": {
-                    "width": 80,
-                    "height": 80
-                }
-            }
-        ]
+    "zones": [
+      {
+        "id": "zone-1",
+        "position": {
+          "x": 10,
+          "y": 10
+        },
+        "size": {
+          "width": 80,
+          "height": 65
+        }
+      }
+    ]
+  },
+  {
+    "id": "collage-2img-sidebyside-caption",
+    "name": "Side by Side + Caption",
+    "category": "double",
+    "thumbnail": "",
+    "hasCaption": true,
+    "captionVariantId": "collage-2img-sidebyside",
+    "captionZone": {
+      "position": {
+        "x": 5,
+        "y": 81
+      },
+      "size": {
+        "width": 90,
+        "height": 14
+      }
     },
-    {
-        "id": "single-left",
-        "name": "Left Aligned",
-        "category": "single",
-        "thumbnail": "",
-        "zones": [
-            {
-                "id": "zone-1",
-                "position": {
-                    "x": 5,
-                    "y": 10
-                },
-                "size": {
-                    "width": 70,
-                    "height": 80
-                }
-            }
-        ]
+    "zones": [
+      {
+        "id": "zone-1",
+        "position": {
+          "x": 5,
+          "y": 5
+        },
+        "size": {
+          "width": 44,
+          "height": 76
+        }
+      },
+      {
+        "id": "zone-2",
+        "position": {
+          "x": 51,
+          "y": 5
+        },
+        "size": {
+          "width": 44,
+          "height": 76
+        }
+      }
+    ]
+  },
+  {
+    "id": "collage-2img-stacked-caption",
+    "name": "Stacked + Caption",
+    "category": "double",
+    "thumbnail": "",
+    "hasCaption": true,
+    "captionVariantId": "collage-2img-stacked",
+    "captionZone": {
+      "position": {
+        "x": 5,
+        "y": 81
+      },
+      "size": {
+        "width": 90,
+        "height": 14
+      }
     },
-    {
-        "id": "single-right",
-        "name": "Right Aligned",
-        "category": "single",
-        "thumbnail": "",
-        "zones": [
-            {
-                "id": "zone-1",
-                "position": {
-                    "x": 25,
-                    "y": 10
-                },
-                "size": {
-                    "width": 70,
-                    "height": 80
-                }
-            }
-        ]
+    "zones": [
+      {
+        "id": "zone-1",
+        "position": {
+          "x": 5,
+          "y": 5
+        },
+        "size": {
+          "width": 90,
+          "height": 37
+        }
+      },
+      {
+        "id": "zone-2",
+        "position": {
+          "x": 5,
+          "y": 44
+        },
+        "size": {
+          "width": 90,
+          "height": 37
+        }
+      }
+    ]
+  },
+  {
+    "id": "collage-2img-stacked-v2-caption",
+    "name": "Stacked Unequal + Caption",
+    "category": "double",
+    "thumbnail": "",
+    "hasCaption": true,
+    "captionVariantId": "collage-2img-stacked-v2",
+    "captionZone": {
+      "position": {
+        "x": 5,
+        "y": 81
+      },
+      "size": {
+        "width": 90,
+        "height": 14
+      }
     },
-    {
-        "id": "single-top",
-        "name": "Top Aligned",
-        "category": "single",
-        "thumbnail": "",
-        "zones": [
-            {
-                "id": "zone-1",
-                "position": {
-                    "x": 10,
-                    "y": 5
-                },
-                "size": {
-                    "width": 80,
-                    "height": 60
-                }
-            }
-        ]
+    "zones": [
+      {
+        "id": "zone-1",
+        "position": {
+          "x": 5,
+          "y": 5
+        },
+        "size": {
+          "width": 90,
+          "height": 46
+        }
+      },
+      {
+        "id": "zone-2",
+        "position": {
+          "x": 5,
+          "y": 53
+        },
+        "size": {
+          "width": 90,
+          "height": 28
+        }
+      }
+    ]
+  },
+  {
+    "id": "collage-2img-diagonal-caption",
+    "name": "Diagonal + Caption",
+    "category": "double",
+    "thumbnail": "",
+    "hasCaption": true,
+    "captionVariantId": "collage-2img-diagonal",
+    "captionZone": {
+      "position": {
+        "x": 5,
+        "y": 51
+      },
+      "size": {
+        "width": 40,
+        "height": 30
+      }
     },
-    {
-        "id": "single-bottom",
-        "name": "Bottom Aligned",
-        "category": "single",
-        "thumbnail": "",
-        "zones": [
-            {
-                "id": "zone-1",
-                "position": {
-                    "x": 10,
-                    "y": 35
-                },
-                "size": {
-                    "width": 80,
-                    "height": 60
-                }
-            }
-        ]
+    "zones": [
+      {
+        "id": "zone-1",
+        "position": {
+          "x": 5,
+          "y": 5
+        },
+        "size": {
+          "width": 44,
+          "height": 44
+        }
+      },
+      {
+        "id": "zone-2",
+        "position": {
+          "x": 51,
+          "y": 51
+        },
+        "size": {
+          "width": 44,
+          "height": 44
+        }
+      }
+    ]
+  },
+  {
+    "id": "collage-3img-1top2bottom-caption",
+    "name": "1 Top + 2 Bottom + Caption",
+    "category": "triple",
+    "thumbnail": "",
+    "hasCaption": true,
+    "captionVariantId": "collage-3img-1top2bottom",
+    "captionZone": {
+      "position": {
+        "x": 5,
+        "y": 81
+      },
+      "size": {
+        "width": 90,
+        "height": 14
+      }
     },
-    {
-        "id": "double-side",
-        "name": "Side by Side",
-        "category": "double",
-        "thumbnail": "",
-        "zones": [
-            {
-                "id": "zone-1",
-                "position": {
-                    "x": 2,
-                    "y": 10
-                },
-                "size": {
-                    "width": 46,
-                    "height": 80
-                }
-            },
-            {
-                "id": "zone-2",
-                "position": {
-                    "x": 52,
-                    "y": 10
-                },
-                "size": {
-                    "width": 46,
-                    "height": 80
-                }
-            }
-        ]
+    "zones": [
+      {
+        "id": "zone-1",
+        "position": {
+          "x": 5,
+          "y": 5
+        },
+        "size": {
+          "width": 90,
+          "height": 44
+        }
+      },
+      {
+        "id": "zone-2",
+        "position": {
+          "x": 5,
+          "y": 51
+        },
+        "size": {
+          "width": 44,
+          "height": 30
+        }
+      },
+      {
+        "id": "zone-3",
+        "position": {
+          "x": 51,
+          "y": 51
+        },
+        "size": {
+          "width": 44,
+          "height": 30
+        }
+      }
+    ]
+  },
+  {
+    "id": "collage-3img-2top1bottom-caption",
+    "name": "2 Top + 1 Bottom + Caption",
+    "category": "triple",
+    "thumbnail": "",
+    "hasCaption": true,
+    "captionVariantId": "collage-3img-2top1bottom",
+    "captionZone": {
+      "position": {
+        "x": 5,
+        "y": 81
+      },
+      "size": {
+        "width": 90,
+        "height": 14
+      }
     },
-    {
-        "id": "double-stack",
-        "name": "Stacked",
-        "category": "double",
-        "thumbnail": "",
-        "zones": [
-            {
-                "id": "zone-1",
-                "position": {
-                    "x": 10,
-                    "y": 2
-                },
-                "size": {
-                    "width": 80,
-                    "height": 46
-                }
-            },
-            {
-                "id": "zone-2",
-                "position": {
-                    "x": 10,
-                    "y": 52
-                },
-                "size": {
-                    "width": 80,
-                    "height": 46
-                }
-            }
-        ]
+    "zones": [
+      {
+        "id": "zone-1",
+        "position": {
+          "x": 5,
+          "y": 5
+        },
+        "size": {
+          "width": 44,
+          "height": 26
+        }
+      },
+      {
+        "id": "zone-2",
+        "position": {
+          "x": 51,
+          "y": 5
+        },
+        "size": {
+          "width": 44,
+          "height": 26
+        }
+      },
+      {
+        "id": "zone-3",
+        "position": {
+          "x": 5,
+          "y": 33
+        },
+        "size": {
+          "width": 90,
+          "height": 48
+        }
+      }
+    ]
+  },
+  {
+    "id": "collage-4img-grid-caption",
+    "name": "4-Image Grid + Caption",
+    "category": "collage",
+    "thumbnail": "",
+    "hasCaption": true,
+    "captionVariantId": "collage-4img-grid",
+    "captionZone": {
+      "position": {
+        "x": 5,
+        "y": 81
+      },
+      "size": {
+        "width": 90,
+        "height": 14
+      }
     },
-    {
-        "id": "double-large-small",
-        "name": "Featured Left",
-        "category": "double",
-        "thumbnail": "",
-        "zones": [
-            {
-                "id": "zone-1",
-                "position": {
-                    "x": 2,
-                    "y": 10
-                },
-                "size": {
-                    "width": 60,
-                    "height": 80
-                }
-            },
-            {
-                "id": "zone-2",
-                "position": {
-                    "x": 66,
-                    "y": 10
-                },
-                "size": {
-                    "width": 32,
-                    "height": 40
-                }
-            }
-        ]
+    "zones": [
+      {
+        "id": "zone-1",
+        "position": {
+          "x": 5,
+          "y": 5
+        },
+        "size": {
+          "width": 44,
+          "height": 37
+        }
+      },
+      {
+        "id": "zone-2",
+        "position": {
+          "x": 51,
+          "y": 5
+        },
+        "size": {
+          "width": 44,
+          "height": 37
+        }
+      },
+      {
+        "id": "zone-3",
+        "position": {
+          "x": 5,
+          "y": 44
+        },
+        "size": {
+          "width": 44,
+          "height": 37
+        }
+      },
+      {
+        "id": "zone-4",
+        "position": {
+          "x": 51,
+          "y": 44
+        },
+        "size": {
+          "width": 44,
+          "height": 37
+        }
+      }
+    ]
+  },
+  {
+    "id": "collage-4img-staggered-a-caption",
+    "name": "Staggered Grid A + Caption",
+    "category": "collage",
+    "thumbnail": "",
+    "hasCaption": true,
+    "captionVariantId": "collage-4img-staggered-a",
+    "captionZone": {
+      "position": {
+        "x": 5,
+        "y": 81
+      },
+      "size": {
+        "width": 90,
+        "height": 14
+      }
     },
-    {
-        "id": "double-small-large",
-        "name": "Featured Right",
-        "category": "double",
-        "thumbnail": "",
-        "zones": [
-            {
-                "id": "zone-1",
-                "position": {
-                    "x": 2,
-                    "y": 10
-                },
-                "size": {
-                    "width": 32,
-                    "height": 40
-                }
-            },
-            {
-                "id": "zone-2",
-                "position": {
-                    "x": 38,
-                    "y": 10
-                },
-                "size": {
-                    "width": 60,
-                    "height": 80
-                }
-            }
-        ]
+    "zones": [
+      {
+        "id": "zone-1",
+        "position": {
+          "x": 5,
+          "y": 5
+        },
+        "size": {
+          "width": 44,
+          "height": 26
+        }
+      },
+      {
+        "id": "zone-2",
+        "position": {
+          "x": 51,
+          "y": 5
+        },
+        "size": {
+          "width": 44,
+          "height": 42
+        }
+      },
+      {
+        "id": "zone-3",
+        "position": {
+          "x": 5,
+          "y": 33
+        },
+        "size": {
+          "width": 44,
+          "height": 48
+        }
+      },
+      {
+        "id": "zone-4",
+        "position": {
+          "x": 51,
+          "y": 49
+        },
+        "size": {
+          "width": 44,
+          "height": 32
+        }
+      }
+    ]
+  },
+  {
+    "id": "collage-4img-staggered-b-caption",
+    "name": "Staggered Grid B + Caption",
+    "category": "collage",
+    "thumbnail": "",
+    "hasCaption": true,
+    "captionVariantId": "collage-4img-staggered-b",
+    "captionZone": {
+      "position": {
+        "x": 5,
+        "y": 81
+      },
+      "size": {
+        "width": 90,
+        "height": 14
+      }
     },
-    {
-        "id": "double-overlap",
-        "name": "Overlapping",
-        "category": "double",
-        "thumbnail": "",
-        "zones": [
-            {
-                "id": "zone-1",
-                "position": {
-                    "x": 5,
-                    "y": 5
-                },
-                "size": {
-                    "width": 50,
-                    "height": 60
-                }
-            },
-            {
-                "id": "zone-2",
-                "position": {
-                    "x": 45,
-                    "y": 35
-                },
-                "size": {
-                    "width": 50,
-                    "height": 60
-                }
-            }
-        ]
-    },
-    {
-        "id": "triple-equal",
-        "name": "Three Equal",
-        "category": "triple",
-        "thumbnail": "",
-        "zones": [
-            {
-                "id": "zone-1",
-                "position": {
-                    "x": 2,
-                    "y": 10
-                },
-                "size": {
-                    "width": 30,
-                    "height": 80
-                }
-            },
-            {
-                "id": "zone-2",
-                "position": {
-                    "x": 35,
-                    "y": 10
-                },
-                "size": {
-                    "width": 30,
-                    "height": 80
-                }
-            },
-            {
-                "id": "zone-3",
-                "position": {
-                    "x": 68,
-                    "y": 10
-                },
-                "size": {
-                    "width": 30,
-                    "height": 80
-                }
-            }
-        ]
-    },
-    {
-        "id": "triple-featured",
-        "name": "Featured Top",
-        "category": "triple",
-        "thumbnail": "",
-        "zones": [
-            {
-                "id": "zone-1",
-                "position": {
-                    "x": 10,
-                    "y": 5
-                },
-                "size": {
-                    "width": 80,
-                    "height": 45
-                }
-            },
-            {
-                "id": "zone-2",
-                "position": {
-                    "x": 10,
-                    "y": 53
-                },
-                "size": {
-                    "width": 38,
-                    "height": 42
-                }
-            },
-            {
-                "id": "zone-3",
-                "position": {
-                    "x": 52,
-                    "y": 53
-                },
-                "size": {
-                    "width": 38,
-                    "height": 42
-                }
-            }
-        ]
-    },
-    {
-        "id": "triple-stacked",
-        "name": "Three Stacked",
-        "category": "triple",
-        "thumbnail": "",
-        "zones": [
-            {
-                "id": "zone-1",
-                "position": {
-                    "x": 10,
-                    "y": 2
-                },
-                "size": {
-                    "width": 80,
-                    "height": 30
-                }
-            },
-            {
-                "id": "zone-2",
-                "position": {
-                    "x": 10,
-                    "y": 35
-                },
-                "size": {
-                    "width": 80,
-                    "height": 30
-                }
-            },
-            {
-                "id": "zone-3",
-                "position": {
-                    "x": 10,
-                    "y": 68
-                },
-                "size": {
-                    "width": 80,
-                    "height": 30
-                }
-            }
-        ]
-    },
-    {
-        "id": "collage-four",
-        "name": "Four Grid",
-        "category": "collage",
-        "thumbnail": "",
-        "zones": [
-            {
-                "id": "zone-1",
-                "position": {
-                    "x": 2,
-                    "y": 2
-                },
-                "size": {
-                    "width": 48,
-                    "height": 48
-                }
-            },
-            {
-                "id": "zone-2",
-                "position": {
-                    "x": 52,
-                    "y": 2
-                },
-                "size": {
-                    "width": 46,
-                    "height": 48
-                }
-            },
-            {
-                "id": "zone-3",
-                "position": {
-                    "x": 2,
-                    "y": 52
-                },
-                "size": {
-                    "width": 48,
-                    "height": 46
-                }
-            },
-            {
-                "id": "zone-4",
-                "position": {
-                    "x": 52,
-                    "y": 52
-                },
-                "size": {
-                    "width": 46,
-                    "height": 46
-                }
-            }
-        ]
-    },
-    {
-        "id": "collage-mosaic",
-        "name": "Mosaic",
-        "category": "collage",
-        "thumbnail": "",
-        "zones": [
-            {
-                "id": "zone-1",
-                "position": {
-                    "x": 2,
-                    "y": 2
-                },
-                "size": {
-                    "width": 48,
-                    "height": 65
-                }
-            },
-            {
-                "id": "zone-2",
-                "position": {
-                    "x": 52,
-                    "y": 2
-                },
-                "size": {
-                    "width": 46,
-                    "height": 30
-                }
-            },
-            {
-                "id": "zone-3",
-                "position": {
-                    "x": 52,
-                    "y": 35
-                },
-                "size": {
-                    "width": 46,
-                    "height": 32
-                }
-            },
-            {
-                "id": "zone-4",
-                "position": {
-                    "x": 2,
-                    "y": 70
-                },
-                "size": {
-                    "width": 48,
-                    "height": 28
-                }
-            },
-            {
-                "id": "zone-5",
-                "position": {
-                    "x": 52,
-                    "y": 70
-                },
-                "size": {
-                    "width": 46,
-                    "height": 28
-                }
-            }
-        ]
-    },
-    {
-        "id": "collage-featured",
-        "name": "Featured Collage",
-        "category": "collage",
-        "thumbnail": "",
-        "zones": [
-            {
-                "id": "zone-1",
-                "position": {
-                    "x": 2,
-                    "y": 2
-                },
-                "size": {
-                    "width": 65,
-                    "height": 96
-                }
-            },
-            {
-                "id": "zone-2",
-                "position": {
-                    "x": 70,
-                    "y": 2
-                },
-                "size": {
-                    "width": 28,
-                    "height": 30
-                }
-            },
-            {
-                "id": "zone-3",
-                "position": {
-                    "x": 70,
-                    "y": 35
-                },
-                "size": {
-                    "width": 28,
-                    "height": 30
-                }
-            },
-            {
-                "id": "zone-4",
-                "position": {
-                    "x": 70,
-                    "y": 68
-                },
-                "size": {
-                    "width": 28,
-                    "height": 30
-                }
-            }
-        ]
-    },
-    {
-        "id": "collage-six",
-        "name": "Six Grid",
-        "category": "collage",
-        "thumbnail": "",
-        "zones": [
-            {
-                "id": "zone-1",
-                "position": {
-                    "x": 2,
-                    "y": 2
-                },
-                "size": {
-                    "width": 31,
-                    "height": 31
-                }
-            },
-            {
-                "id": "zone-2",
-                "position": {
-                    "x": 35,
-                    "y": 2
-                },
-                "size": {
-                    "width": 30,
-                    "height": 31
-                }
-            },
-            {
-                "id": "zone-3",
-                "position": {
-                    "x": 68,
-                    "y": 2
-                },
-                "size": {
-                    "width": 30,
-                    "height": 31
-                }
-            },
-            {
-                "id": "zone-4",
-                "position": {
-                    "x": 2,
-                    "y": 35
-                },
-                "size": {
-                    "width": 31,
-                    "height": 63
-                }
-            },
-            {
-                "id": "zone-5",
-                "position": {
-                    "x": 35,
-                    "y": 35
-                },
-                "size": {
-                    "width": 30,
-                    "height": 63
-                }
-            },
-            {
-                "id": "zone-6",
-                "position": {
-                    "x": 68,
-                    "y": 35
-                },
-                "size": {
-                    "width": 30,
-                    "height": 63
-                }
-            }
-        ]
-    }
+    "zones": [
+      {
+        "id": "zone-1",
+        "position": {
+          "x": 5,
+          "y": 5
+        },
+        "size": {
+          "width": 44,
+          "height": 42
+        }
+      },
+      {
+        "id": "zone-2",
+        "position": {
+          "x": 51,
+          "y": 5
+        },
+        "size": {
+          "width": 44,
+          "height": 26
+        }
+      },
+      {
+        "id": "zone-3",
+        "position": {
+          "x": 5,
+          "y": 49
+        },
+        "size": {
+          "width": 44,
+          "height": 32
+        }
+      },
+      {
+        "id": "zone-4",
+        "position": {
+          "x": 51,
+          "y": 33
+        },
+        "size": {
+          "width": 44,
+          "height": 48
+        }
+      }
+    ]
+  }
 ]
