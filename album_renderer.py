@@ -47,6 +47,37 @@ ASSETS_DIR = Path(__file__).parent / "assets"
 # FONT CONFIGURATION
 # =========================
 
+# Indian language (Indic script) Unicode ranges and their corresponding Noto Sans font files.
+# Used to detect non-Latin text and fall back to a font that can render it.
+INDIC_SCRIPT_RANGES = [
+    # (start, end, font_filename)
+    (0x0900, 0x097F, "NotoSansDevanagari-Regular.ttf"),  # Devanagari (Hindi, Marathi, Sanskrit, Nepali)
+    (0xA8E0, 0xA8FF, "NotoSansDevanagari-Regular.ttf"),  # Devanagari Extended
+    (0x0980, 0x09FF, "NotoSansBengali-Regular.ttf"),      # Bengali / Assamese
+    (0x0A00, 0x0A7F, "NotoSansGurmukhi-Regular.ttf"),     # Gurmukhi (Punjabi)
+    (0x0A80, 0x0AFF, "NotoSansGujarati-Regular.ttf"),     # Gujarati
+    (0x0B00, 0x0B7F, "NotoSansOriya-Regular.ttf"),        # Oriya (Odia)
+    (0x0B80, 0x0BFF, "NotoSansTamil-Regular.ttf"),        # Tamil
+    (0x0C00, 0x0C7F, "NotoSansTelugu-Regular.ttf"),       # Telugu
+    (0x0C80, 0x0CFF, "NotoSansKannada-Regular.ttf"),      # Kannada
+    (0x0D00, 0x0D7F, "NotoSansMalayalam-Regular.ttf"),    # Malayalam
+]
+
+
+def detect_indic_font(text: str) -> Optional[str]:
+    """Detect if text contains Indic script characters and return the appropriate font filename.
+
+    Returns the font filename for the first Indic script found in the text, or None if
+    the text contains only Latin/common characters.
+    """
+    for char in text:
+        cp = ord(char)
+        for start, end, font_file in INDIC_SCRIPT_RANGES:
+            if start <= cp <= end:
+                return font_file
+    return None
+
+
 # Font family mapping
 FONT_FAMILY_MAP = {
     # Google Fonts
@@ -277,12 +308,33 @@ def resolve_font_family(css_font_family: str) -> str:
     
     return "Arial"
 
-def load_font(family: str, size: int, style: str = "normal", weight: str = "normal") -> tuple:
+def load_font(family: str, size: int, style: str = "normal", weight: str = "normal",
+              indic_font_file: Optional[str] = None) -> tuple:
     """Load font with fallback to system fonts if not found.
+
+    Args:
+        family: Font family name
+        size: Font size in pixels
+        style: Font style ("normal" or "italic")
+        weight: Font weight ("normal", "bold", "700", etc.)
+        indic_font_file: If set, use this Indic script font from FONTS_DIR instead of
+                         the requested family (the primary font won't have these glyphs).
 
     Returns:
         tuple: (ImageFont.FreeTypeFont, bool) - The font and whether bold was requested but not found
     """
+    # If text contains Indic script characters, use the appropriate Noto font
+    if indic_font_file and FONTS_DIR.exists():
+        indic_path = FONTS_DIR / indic_font_file
+        if indic_path.exists():
+            try:
+                loaded = ImageFont.truetype(str(indic_path), size)
+                is_bold = weight in ("bold", "700", "800", "900") or (isinstance(weight, int) and weight >= 700)
+                print(f"[DEBUG] Using Indic font: {indic_path} (size={size}, requested family='{family}')")
+                return (loaded, is_bold)  # simulate bold via stroke for Indic text if bold was requested
+            except (OSError, IOError):
+                print(f"[WARNING] Failed to load Indic font {indic_path}, falling back to normal font resolution")
+
     # List of font paths to try
     font_attempts = []
     bold_requested_but_not_found = False
@@ -430,8 +482,14 @@ def draw_text(
 
     print(f"[DEBUG] Font family: '{css_font_family}' -> '{font_family}'")
 
+    # Detect Indic script text and select appropriate font
+    indic_font_file = detect_indic_font(content)
+    if indic_font_file:
+        print(f"[DEBUG] Indic script detected in text, using fallback font: {indic_font_file}")
+
     # Load font (returns tuple: font, simulate_bold)
-    font, simulate_bold = load_font(font_family, font_px, font_style, font_weight)
+    font, simulate_bold = load_font(font_family, font_px, font_style, font_weight,
+                                     indic_font_file=indic_font_file)
 
     # Calculate stroke width for simulated bold (proportional to font size)
     stroke_width = max(1, font_px // 50) if simulate_bold else 0
@@ -483,7 +541,8 @@ def draw_text(
             scale_factor = available_width / text_width
 
         font_px = int(font_px * scale_factor)
-        font, simulate_bold = load_font(font_family, font_px, font_style, font_weight)
+        font, simulate_bold = load_font(font_family, font_px, font_style, font_weight,
+                                         indic_font_file=indic_font_file)
         stroke_width = max(1, font_px // 50) if simulate_bold else 0
 
         if has_emoji:
