@@ -498,7 +498,7 @@ def draw_text(
 ):
     """Draw text element on the image."""
     content = text_elem.get("content", "")
-    if not content:
+    if not content or content.strip() == "Enter Text":
         return
 
     y = override_y if override_y is not None else pct_y(page_h, text_elem.get("position", {}).get("y", 0))
@@ -1086,7 +1086,8 @@ async def render_page(
                 "text": raw.get("captionText", ""),
                 "fontFamily": raw.get("captionFontFamily"),
             }
-    if (caption_data and caption_data.get("enabled") and caption_data.get("text")
+    if (caption_data and caption_data.get("text")
+            and caption_data.get("text", "").strip() != "Enter Text"
             and layout and layout.hasCaption and layout.captionZone):
         try:
             cz = layout.captionZone
@@ -1103,9 +1104,11 @@ async def render_page(
             caption_bg = Image.new("RGB", (int(cw), int(ch)), color=bg_color)
             canvas.paste(caption_bg, (int(cx), int(cy)))
 
-            # Scale font size from design reference (600px) to print resolution
+            # Resolve fontSize: explicit fontSize > captionSize preset > default 14
+            CAPTION_SIZE_PRESETS = {"S": 14, "L": 24}
             scale_y = page_height / DESIGN_REF_HEIGHT
-            base_font_size = caption_data.get("fontSize") or 14
+            caption_size = caption_data.get("captionSize", "S")
+            base_font_size = caption_data.get("fontSize") or CAPTION_SIZE_PRESETS.get(caption_size, 14)
             font_px = int(base_font_size * scale_y)
             line_height = caption_data.get("lineHeight", 1.2)
 
@@ -1114,11 +1117,11 @@ async def render_page(
             font_family = resolve_font_family(css_font_family)
             font_weight = caption_data.get("fontWeight", "normal")
             text_align = caption_data.get("textAlign", "left")
-            caption_color = "#333333"
+            caption_color = caption_data.get("color") or "#333333"
 
-            # Padding inside caption zone
-            padding_x = int(cw * 0.05)
-            padding_y = int(ch * 0.05)
+            # Padding inside caption zone — match UI's small padding (approx 1% of zone)
+            padding_x = int(cw * 0.01)
+            padding_y = int(ch * 0.01)
             available_width = int(cw) - 2 * padding_x
             available_height = int(ch) - 2 * padding_y
 
@@ -1126,17 +1129,42 @@ async def render_page(
 
             # Helper: wrap text into lines that fit available_width
             def wrap_text(text, fnt, max_width, sw=0):
+                def measure_width(t):
+                    try:
+                        bbox = draw.textbbox((0, 0), t, font=fnt, stroke_width=sw)
+                        return bbox[2] - bbox[0]
+                    except:
+                        return len(t) * font_px * 0.6
+
+                # Character-level wrap for a single chunk that exceeds max_width
+                def char_wrap(chunk):
+                    chunk_lines = []
+                    buf = ""
+                    for ch in chunk:
+                        test = buf + ch
+                        if measure_width(test) <= max_width:
+                            buf = test
+                        else:
+                            if buf:
+                                chunk_lines.append(buf)
+                            buf = ch
+                    if buf:
+                        chunk_lines.append(buf)
+                    return chunk_lines if chunk_lines else [chunk]
+
                 words = text.split()
                 lines = []
                 current_line = ""
                 for word in words:
+                    # If a single word is wider than max_width, break it by character
+                    if measure_width(word) > max_width:
+                        if current_line:
+                            lines.append(current_line)
+                            current_line = ""
+                        lines.extend(char_wrap(word))
+                        continue
                     test_line = f"{current_line} {word}".strip() if current_line else word
-                    try:
-                        bbox = draw.textbbox((0, 0), test_line, font=fnt, stroke_width=sw)
-                        w = bbox[2] - bbox[0]
-                    except:
-                        w = len(test_line) * font_px * 0.6
-                    if w <= max_width:
+                    if measure_width(test_line) <= max_width:
                         current_line = test_line
                     else:
                         if current_line:
@@ -1146,19 +1174,12 @@ async def render_page(
                     lines.append(current_line)
                 return lines if lines else [text]
 
-            # Helper: measure total wrapped text height
+            # Helper: measure total wrapped text height (matching CSS line-height behavior)
             def measure_wrapped_height(lines, fnt, lh, sw=0):
-                total = 0
-                for i, line in enumerate(lines):
-                    try:
-                        bbox = draw.textbbox((0, 0), line, font=fnt, stroke_width=sw)
-                        h = bbox[3] - bbox[1]
-                    except:
-                        h = fnt.size if hasattr(fnt, 'size') else font_px
-                    total += h
-                    if i < len(lines) - 1:
-                        total += int(h * (lh - 1))
-                return total
+                if not lines:
+                    return 0
+                # CSS line-height: each line occupies font_px * lh
+                return int(len(lines) * font_px * lh)
 
             # Detect Indic script in caption text
             caption_indic_font = detect_indic_font(caption_text)
@@ -1206,7 +1227,7 @@ async def render_page(
                     stroke_width=stroke_width,
                     stroke_fill=caption_color if stroke_width > 0 else None,
                 )
-                start_y += int(line_h * line_height)
+                start_y += int(font_px * line_height)
 
             print(f"  📝 Caption rendered: '{caption_text}' ({len(wrapped_lines)} lines, font={css_font_family}, size={base_font_size}→{font_px}px, align={text_align}, lineHeight={line_height})")
         except Exception as e:

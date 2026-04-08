@@ -15,8 +15,14 @@
     "zones": [
       {
         "id": "zone-1",
-        "position": { "x": 0, "y": 0 },
-        "size": { "width": 100, "height": 100 }
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "size": {
+          "width": 100,
+          "height": 100
+        }
       }
     ]
   },
@@ -29,8 +35,14 @@
     "zones": [
       {
         "id": "zone-1",
-        "position": { "x": 10, "y": 10 },
-        "size": { "width": 80, "height": 80 }
+        "position": {
+          "x": 5,
+          "y": 5
+        },
+        "size": {
+          "width": 90,
+          "height": 90
+        }
       }
     ]
   },
@@ -49,37 +61,6 @@
         "size": {
           "width": 80,
           "height": 60
-        }
-      }
-    ]
-  },
-  {
-    "id": "collage-2img-sidebyside",
-    "name": "Side by Side",
-    "category": "double",
-    "thumbnail": "",
-    "captionVariantId": "collage-2img-sidebyside-caption",
-    "zones": [
-      {
-        "id": "zone-1",
-        "position": {
-          "x": 5,
-          "y": 5
-        },
-        "size": {
-          "width": 44,
-          "height": 90
-        }
-      },
-      {
-        "id": "zone-2",
-        "position": {
-          "x": 51,
-          "y": 5
-        },
-        "size": {
-          "width": 44,
-          "height": 90
         }
       }
     ]
@@ -116,37 +97,6 @@
     ]
   },
   {
-    "id": "collage-2img-stacked-v2",
-    "name": "Stacked Unequal",
-    "category": "double",
-    "thumbnail": "",
-    "captionVariantId": "collage-2img-stacked-v2-caption",
-    "zones": [
-      {
-        "id": "zone-1",
-        "position": {
-          "x": 5,
-          "y": 5
-        },
-        "size": {
-          "width": 90,
-          "height": 55
-        }
-      },
-      {
-        "id": "zone-2",
-        "position": {
-          "x": 5,
-          "y": 62
-        },
-        "size": {
-          "width": 90,
-          "height": 33
-        }
-      }
-    ]
-  },
-  {
     "id": "collage-2img-diagonal",
     "name": "Diagonal",
     "category": "double",
@@ -178,6 +128,79 @@
     ]
   },
   {
+    "id": "collage-2img-portrait",
+    "name": "2 Portrait",
+    "category": "double",
+    "thumbnail": "",
+    "captionVariantId": "collage-2img-portrait-caption",
+    "zones": [
+      {
+        "id": "zone-1",
+        "position": {
+          "x": 5,
+          "y": 13
+        },
+        "size": {
+          "width": 44,
+          "height": 75
+        }
+      },
+      {
+        "id": "zone-2",
+        "position": {
+          "x": 51,
+          "y": 13
+        },
+        "size": {
+          "width": 44,
+          "height": 75
+        }
+      }
+    ]
+  },
+  {
+    "id": "collage-3img-1left2right",
+    "name": "1 Left + 2 Right",
+    "category": "triple",
+    "thumbnail": "",
+    "captionVariantId": "collage-3img-1left2right-caption",
+    "zones": [
+      {
+        "id": "zone-1",
+        "position": {
+          "x": 5,
+          "y": 20
+        },
+        "size": {
+          "width": 44,
+          "height": 60
+        }
+      },
+      {
+        "id": "zone-2",
+        "position": {
+          "x": 51,
+          "y": 5
+        },
+        "size": {
+          "width": 44,
+          "height": 44
+        }
+      },
+      {
+        "id": "zone-3",
+        "position": {
+          "x": 51,
+          "y": 51
+        },
+        "size": {
+          "width": 44,
+          "height": 44
+        }
+      }
+    ]
+  },
+  {
     "id": "collage-3img-1top2bottom",
     "name": "1 Top + 2 Bottom",
     "category": "triple",
@@ -192,29 +215,29 @@
         },
         "size": {
           "width": 90,
-          "height": 55
+          "height": 45
         }
       },
       {
         "id": "zone-2",
         "position": {
           "x": 5,
-          "y": 62
+          "y": 52
         },
         "size": {
           "width": 44,
-          "height": 33
+          "height": 43
         }
       },
       {
         "id": "zone-3",
         "position": {
           "x": 51,
-          "y": 62
+          "y": 52
         },
         "size": {
           "width": 44,
-          "height": 33
+          "height": 43
         }
       }
     ]
@@ -234,7 +257,7 @@
         },
         "size": {
           "width": 44,
-          "height": 33
+          "height": 44
         }
       },
       {
@@ -245,18 +268,18 @@
         },
         "size": {
           "width": 44,
-          "height": 33
+          "height": 44
         }
       },
       {
         "id": "zone-3",
         "position": {
           "x": 5,
-          "y": 40
+          "y": 51
         },
         "size": {
           "width": 90,
-          "height": 55
+          "height": 44
         }
       }
     ]
@@ -323,7 +346,10 @@
     "zones": [
       {
         "id": "zone-1",
-        "position": { "x": 5, "y": 5 },
+        "position": {
+          "x": 5,
+          "y": 5
+        },
         "size": {
           "width": 44,
           "height": 33
@@ -360,59 +386,6 @@
         "size": {
           "width": 44,
           "height": 35
-        }
-      }
-    ]
-  },
-  {
-    "id": "collage-4img-staggered-b",
-    "name": "Staggered Grid B",
-    "category": "collage",
-    "thumbnail": "",
-    "captionVariantId": "collage-4img-staggered-b-caption",
-    "zones": [
-      {
-        "id": "zone-1",
-        "position": {
-          "x": 5,
-          "y": 5
-        },
-        "size": {
-          "width": 44,
-          "height": 53
-        }
-      },
-      {
-        "id": "zone-2",
-        "position": {
-          "x": 51,
-          "y": 5
-        },
-        "size": {
-          "width": 44,
-          "height": 33
-        }
-      },
-      {
-        "id": "zone-3",
-        "position": {
-          "x": 5,
-          "y": 60
-        },
-        "size": {
-          "width": 44,
-          "height": 35
-        }
-      },
-      {
-        "id": "zone-4",
-        "position": {
-          "x": 51,
-          "y": 40
-        },
-        "size": {
-          "width": 44,
-          "height": 55
         }
       }
     ]
@@ -469,54 +442,12 @@
       {
         "id": "zone-1",
         "position": {
-          "x": 10,
-          "y": 10
-        },
-        "size": {
-          "width": 80,
-          "height": 65
-        }
-      }
-    ]
-  },
-  {
-    "id": "collage-2img-sidebyside-caption",
-    "name": "Side by Side + Caption",
-    "category": "double",
-    "thumbnail": "",
-    "hasCaption": true,
-    "captionVariantId": "collage-2img-sidebyside",
-    "captionZone": {
-      "position": {
-        "x": 5,
-        "y": 81
-      },
-      "size": {
-        "width": 90,
-        "height": 14
-      }
-    },
-    "zones": [
-      {
-        "id": "zone-1",
-        "position": {
           "x": 5,
           "y": 5
         },
         "size": {
-          "width": 44,
-          "height": 76
-        }
-      },
-      {
-        "id": "zone-2",
-        "position": {
-          "x": 51,
-          "y": 5
-        },
-        "size": {
-          "width": 44,
-          "height": 76
+          "width": 90,
+          "height": 70
         }
       }
     ]
@@ -559,48 +490,6 @@
         "size": {
           "width": 90,
           "height": 37
-        }
-      }
-    ]
-  },
-  {
-    "id": "collage-2img-stacked-v2-caption",
-    "name": "Stacked Unequal + Caption",
-    "category": "double",
-    "thumbnail": "",
-    "hasCaption": true,
-    "captionVariantId": "collage-2img-stacked-v2",
-    "captionZone": {
-      "position": {
-        "x": 5,
-        "y": 81
-      },
-      "size": {
-        "width": 90,
-        "height": 14
-      }
-    },
-    "zones": [
-      {
-        "id": "zone-1",
-        "position": {
-          "x": 5,
-          "y": 5
-        },
-        "size": {
-          "width": 90,
-          "height": 46
-        }
-      },
-      {
-        "id": "zone-2",
-        "position": {
-          "x": 5,
-          "y": 53
-        },
-        "size": {
-          "width": 90,
-          "height": 28
         }
       }
     ]
@@ -657,7 +546,7 @@
     "captionZone": {
       "position": {
         "x": 5,
-        "y": 81
+        "y": 82
       },
       "size": {
         "width": 90,
@@ -673,29 +562,29 @@
         },
         "size": {
           "width": 90,
-          "height": 44
+          "height": 40
         }
       },
       {
         "id": "zone-2",
         "position": {
           "x": 5,
-          "y": 51
+          "y": 47
         },
         "size": {
           "width": 44,
-          "height": 30
+          "height": 35
         }
       },
       {
         "id": "zone-3",
         "position": {
           "x": 51,
-          "y": 51
+          "y": 47
         },
         "size": {
           "width": 44,
-          "height": 30
+          "height": 35
         }
       }
     ]
@@ -726,7 +615,7 @@
         },
         "size": {
           "width": 44,
-          "height": 26
+          "height": 36
         }
       },
       {
@@ -737,18 +626,18 @@
         },
         "size": {
           "width": 44,
-          "height": 26
+          "height": 36
         }
       },
       {
         "id": "zone-3",
         "position": {
           "x": 5,
-          "y": 33
+          "y": 43
         },
         "size": {
           "width": 90,
-          "height": 48
+          "height": 38
         }
       }
     ]
@@ -877,6 +766,101 @@
         "size": {
           "width": 44,
           "height": 32
+        }
+      }
+    ]
+  },
+  {
+    "id": "collage-2img-portrait-caption",
+    "name": "2 Portrait + Caption",
+    "category": "double",
+    "thumbnail": "",
+    "hasCaption": true,
+    "captionVariantId": "collage-2img-portrait",
+    "captionZone": {
+      "position": {
+        "x": 5,
+        "y": 80
+      },
+      "size": {
+        "width": 90,
+        "height": 14
+      }
+    },
+    "zones": [
+      {
+        "id": "zone-1",
+        "position": {
+          "x": 5,
+          "y": 20
+        },
+        "size": {
+          "width": 44,
+          "height": 60
+        }
+      },
+      {
+        "id": "zone-2",
+        "position": {
+          "x": 51,
+          "y": 20
+        },
+        "size": {
+          "width": 44,
+          "height": 60
+        }
+      }
+    ]
+  },
+  {
+    "id": "collage-3img-1left2right-caption",
+    "name": "1 Left + 2 Right + Caption",
+    "category": "triple",
+    "thumbnail": "",
+    "hasCaption": true,
+    "captionVariantId": "collage-3img-1left2right",
+    "captionZone": {
+      "position": {
+        "x": 5,
+        "y": 72
+      },
+      "size": {
+        "width": 44,
+        "height": 23
+      }
+    },
+    "zones": [
+      {
+        "id": "zone-1",
+        "position": {
+          "x": 5,
+          "y": 5
+        },
+        "size": {
+          "width": 44,
+          "height": 65
+        }
+      },
+      {
+        "id": "zone-2",
+        "position": {
+          "x": 51,
+          "y": 5
+        },
+        "size": {
+          "width": 44,
+          "height": 44
+        }
+      },
+      {
+        "id": "zone-3",
+        "position": {
+          "x": 51,
+          "y": 51
+        },
+        "size": {
+          "width": 44,
+          "height": 44
         }
       }
     ]
