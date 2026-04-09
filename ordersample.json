@@ -1,0 +1,1630 @@
+{
+    "id": 94,
+    "documentId": "eeuigtx91kshwai81zka0aof",
+    "orderNumber": "ORD-000032",
+    "shippingAddress": {
+        "city": "Chittorgarh",
+        "phone": "6376078496",
+        "state": "Rajasthan",
+        "pincode": "312001",
+        "fullName": "Harshal Chokhra",
+        "addressLine1": "Near Tejaji Chowk",
+        "addressLine2": "Pratapnagar"
+    },
+    "billingAddress": {
+        "city": "Chittorgarh",
+        "phone": "6376078496",
+        "state": "Rajasthan",
+        "pincode": "312001",
+        "fullName": "Harshal Chokhra",
+        "addressLine1": "Near Tejaji Chowk",
+        "addressLine2": "Pratapnagar"
+    },
+    "subtotal": 1250,
+    "shippingCost": 0,
+    "tax": 225,
+    "discount": 0,
+    "total": 1525,
+    "orderStatus": "pending",
+    "paymentStatus": "pending",
+    "paymentMethod": "cod",
+    "paymentId": null,
+    "razorpayOrderId": null,
+    "razorpaySignature": null,
+    "paymentDetails": {
+        "method": "cod",
+        "codCharge": 50,
+        "createdAt": "2026-04-08T12:13:30.195Z"
+    },
+    "gstAmount": 225,
+    "gstNumber": null,
+    "notes": null,
+    "placedAt": null,
+    "shippedAt": null,
+    "deliveredAt": null,
+    "createdAt": "2026-04-08T12:13:30.515Z",
+    "updatedAt": "2026-04-08T12:13:30.515Z",
+    "publishedAt": "2026-04-08T12:13:30.257Z",
+    "locale": null,
+    "discountCode": null,
+    "discountDetails": null,
+    "isCOD": true,
+    "codCharge": 50,
+    "items": [
+        {
+            "id": 115,
+            "documentId": "n9q7ww8i85qvsixv8jydiw83",
+            "skuCode": "ROSE-BK_10X10-CV_HRD-PP_GLS",
+            "templateName": "Rose",
+            "variantDescription": "10\" x 10\" - Hardcover - Glossy",
+            "selectedOptions": [
+                {
+                    "optionTypeId": 1,
+                    "optionValueId": 3,
+                    "optionTypeName": "Book Size",
+                    "optionTypeSlug": "book-size",
+                    "optionValueName": "10\" x 10\"",
+                    "optionValueSlug": "10-x-10"
+                },
+                {
+                    "optionTypeId": 2,
+                    "optionValueId": 2,
+                    "optionTypeName": "Cover Type",
+                    "optionTypeSlug": "cover-type",
+                    "optionValueName": "Hardcover",
+                    "optionValueSlug": "hardcover"
+                },
+                {
+                    "optionTypeId": 3,
+                    "optionValueId": 1,
+                    "optionTypeName": "Paper Type",
+                    "optionTypeSlug": "paper-type",
+                    "optionValueName": "Glossy",
+                    "optionValueSlug": "glossy"
+                }
+            ],
+            "pageCount": 11,
+            "quantity": 1,
+            "unitPrice": 1250,
+            "totalPrice": 1250,
+            "priceBreakdown": {
+                "itemId": "jwpdjp7agua772qfphim96mq",
+                "discount": 0,
+                "minPages": 23,
+                "quantity": 1,
+                "basePrice": 1250,
+                "pageCount": 11,
+                "unitPrice": 1250,
+                "extraPages": 0,
+                "finalPrice": 1250,
+                "totalPrice": 1250,
+                "pricePerPage": 75,
+                "extraPagesCost": 0
+            },
+            "designSnapshot": {
+                "pages": [
+                    {
+                        "id": "06777ff3-a2fc-4659-a38a-28d7d54b4232",
+                        "elements": [
+                            {
+                                "id": "0912c175-c624-4c42-b9c0-8432e81f6495",
+                                "pageId": "06777ff3-a2fc-4659-a38a-28d7d54b4232",
+                                "zoneId": "zone-1",
+                                "imageId": "0bffb3e8-434f-4c7d-8cbe-2938ddd4f765",
+                                "createdAt": "2026-04-06T08:15:05.576Z",
+                                "transform": {
+                                    "flipX": false,
+                                    "flipY": false,
+                                    "scale": 1,
+                                    "fitMode": "cover",
+                                    "offsetX": 0,
+                                    "offsetY": 0,
+                                    "rotation": 0,
+                                    "layoutMode": "fill"
+                                }
+                            }
+                        ],
+                        "layoutId": "single-bottom",
+                        "pageType": "cover-front",
+                        "createdAt": "2026-04-06T08:15:05.563Z",
+                        "projectId": "bdenfph0u1bb7ladfteclcv4",
+                        "isEditable": true,
+                        "pageNumber": 0,
+                        "spineEnabled": false,
+                        "textElements": [
+                            {
+                                "id": "bc95e56c-3442-44b0-9461-98f647d944b1",
+                                "color": "#000000",
+                                "width": 70,
+                                "pageId": "06777ff3-a2fc-4659-a38a-28d7d54b4232",
+                                "content": "",
+                                "fontSize": 24,
+                                "position": {
+                                    "x": 52.052238805970156,
+                                    "y": 19.029850746268657
+                                },
+                                "rotation": 0,
+                                "createdAt": "2026-04-06T08:15:05.562Z",
+                                "fontStyle": "normal",
+                                "textAlign": "center",
+                                "fontFamily": "Arial, sans-serif",
+                                "fontWeight": "normal"
+                            },
+                            {
+                                "id": "0c39d5b5-5bc1-4af3-b644-3307ea2977f1",
+                                "color": "#000000",
+                                "width": 70,
+                                "pageId": "06777ff3-a2fc-4659-a38a-28d7d54b4232",
+                                "content": "",
+                                "fontSize": 40,
+                                "position": {
+                                    "x": 49.8134328358209,
+                                    "y": 8.208955223880597
+                                },
+                                "rotation": 0,
+                                "createdAt": "2026-04-06T08:15:05.562Z",
+                                "fontStyle": "normal",
+                                "textAlign": "center",
+                                "fontFamily": "Arial, sans-serif",
+                                "fontWeight": "normal"
+                            }
+                        ],
+                        "backgroundColor": "#FBCFE8"
+                    },
+                    {
+                        "id": "901f511a-5368-49f6-9e34-110ce87645a1",
+                        "elements": [],
+                        "layoutId": "single-full",
+                        "pageType": "content",
+                        "createdAt": "2026-04-06T08:15:05.564Z",
+                        "projectId": "bdenfph0u1bb7ladfteclcv4",
+                        "isEditable": false,
+                        "pageNumber": 1,
+                        "spineEnabled": false,
+                        "textElements": [],
+                        "backgroundColor": "#A7F3D0"
+                    },
+                    {
+                        "id": "98ae964a-fc92-4bf1-a7ea-b199cb21f2b3",
+                        "elements": [
+                            {
+                                "id": "81925273-3066-498a-bebb-8dbe8412698e",
+                                "pageId": "98ae964a-fc92-4bf1-a7ea-b199cb21f2b3",
+                                "zoneId": "zone-1",
+                                "imageId": "666af224-4682-423c-9959-57da0e5268b8",
+                                "createdAt": "2026-04-06T08:15:05.576Z",
+                                "transform": {
+                                    "flipX": false,
+                                    "flipY": false,
+                                    "scale": 1,
+                                    "fitMode": "cover",
+                                    "offsetX": 0,
+                                    "offsetY": 0,
+                                    "rotation": 0,
+                                    "layoutMode": "fill"
+                                }
+                            }
+                        ],
+                        "layoutId": "single-centered",
+                        "pageType": "content",
+                        "createdAt": "2026-04-06T08:15:05.566Z",
+                        "projectId": "bdenfph0u1bb7ladfteclcv4",
+                        "isEditable": true,
+                        "pageNumber": 2,
+                        "spineEnabled": false,
+                        "textElements": [],
+                        "backgroundColor": "#A7F3D0"
+                    },
+                    {
+                        "id": "8d6923c2-836e-466c-b253-3b58f843db88",
+                        "caption": {
+                            "text": "hey ",
+                            "color": "#FFFFFF",
+                            "enabled": false,
+                            "fontFamily": "\"League Spartan\", sans-serif",
+                            "lineHeight": 1.2
+                        },
+                        "elements": [
+                            {
+                                "id": "d2536312-3bf1-44ba-8910-c88237592b79",
+                                "pageId": "8d6923c2-836e-466c-b253-3b58f843db88",
+                                "zoneId": "zone-1",
+                                "imageId": "29dc516e-4f79-4637-9792-d3724c7eb9e1",
+                                "createdAt": "2026-04-06T08:52:48.474Z",
+                                "transform": {
+                                    "flipX": false,
+                                    "flipY": false,
+                                    "scale": 1,
+                                    "fitMode": "cover",
+                                    "offsetX": 0,
+                                    "offsetY": 0,
+                                    "rotation": 0,
+                                    "layoutMode": "fill"
+                                }
+                            }
+                        ],
+                        "layoutId": "single-centered-caption",
+                        "pageType": "content",
+                        "createdAt": "2026-04-06T08:15:05.567Z",
+                        "projectId": "bdenfph0u1bb7ladfteclcv4",
+                        "isEditable": true,
+                        "pageNumber": 3,
+                        "spineEnabled": false,
+                        "textElements": [],
+                        "backgroundColor": "#A7F3D0"
+                    },
+                    {
+                        "id": "6c50e814-89b5-489e-9ea7-27bd5d62854e",
+                        "caption": {
+                            "text": "get",
+                            "enabled": true,
+                            "lineHeight": 1.2
+                        },
+                        "elements": [
+                            {
+                                "id": "f1a0402b-4a30-418b-8d88-8854ce28a109",
+                                "pageId": "6c50e814-89b5-489e-9ea7-27bd5d62854e",
+                                "zoneId": "zone-1",
+                                "imageId": "61aa9606-b4e3-42e4-8211-7e48d09d99f7",
+                                "createdAt": "2026-04-08T09:22:37.689Z",
+                                "transform": {
+                                    "flipX": false,
+                                    "flipY": false,
+                                    "scale": 1,
+                                    "fitMode": "cover",
+                                    "offsetX": 0,
+                                    "offsetY": 0,
+                                    "rotation": 0,
+                                    "layoutMode": "fill"
+                                }
+                            }
+                        ],
+                        "layoutId": "single-centered-caption",
+                        "pageType": "content",
+                        "createdAt": "2026-04-06T08:15:05.568Z",
+                        "projectId": "bdenfph0u1bb7ladfteclcv4",
+                        "isEditable": true,
+                        "pageNumber": 4,
+                        "spineEnabled": false,
+                        "textElements": [],
+                        "backgroundColor": "#A7F3D0"
+                    },
+                    {
+                        "id": "0f46dbe8-9f9c-42da-a563-804fcf4ac10b",
+                        "caption": {
+                            "text": "",
+                            "color": "#FFFFFF",
+                            "enabled": false,
+                            "lineHeight": 1.2
+                        },
+                        "elements": [
+                            {
+                                "id": "30d8a15d-cc8f-4521-ae8b-6c29afcc72f1",
+                                "pageId": "0f46dbe8-9f9c-42da-a563-804fcf4ac10b",
+                                "zoneId": "zone-1",
+                                "imageId": "8cdbabff-5898-4b5a-938f-6be8124e216d",
+                                "createdAt": "2026-04-06T08:23:29.064Z",
+                                "transform": {
+                                    "crop": {
+                                        "x": 0,
+                                        "y": 39.18716283908755,
+                                        "width": 100,
+                                        "height": 36.66584463625154
+                                    },
+                                    "scale": 1,
+                                    "fitMode": "cover",
+                                    "offsetX": 0,
+                                    "offsetY": 39.18716283908755,
+                                    "rotation": 0,
+                                    "layoutMode": "fill"
+                                }
+                            },
+                            {
+                                "id": "36fd0cac-508f-45c4-9c53-383d627d9fb7",
+                                "pageId": "0f46dbe8-9f9c-42da-a563-804fcf4ac10b",
+                                "zoneId": "zone-2",
+                                "imageId": "b5237990-f7f1-4827-98e5-9331ebc6f937",
+                                "createdAt": "2026-04-06T08:23:29.065Z",
+                                "transform": {
+                                    "crop": {
+                                        "x": 0,
+                                        "y": 10.32295519934237,
+                                        "width": 100.00000000000003,
+                                        "height": 65.18372379778053
+                                    },
+                                    "scale": 1,
+                                    "fitMode": "cover",
+                                    "offsetX": 0,
+                                    "offsetY": 10.32295519934237,
+                                    "rotation": 0,
+                                    "layoutMode": "fill"
+                                }
+                            }
+                        ],
+                        "layoutId": "collage-2img-stacked",
+                        "pageType": "content",
+                        "createdAt": "2026-04-06T08:15:05.569Z",
+                        "projectId": "bdenfph0u1bb7ladfteclcv4",
+                        "isEditable": true,
+                        "pageNumber": 5,
+                        "spineEnabled": false,
+                        "textElements": [],
+                        "backgroundColor": "#A7F3D0"
+                    },
+                    {
+                        "id": "47eda3fd-dd5f-4907-8d43-d5e494396173",
+                        "caption": {
+                            "text": "helllo",
+                            "color": "#FFFFFF",
+                            "enabled": true,
+                            "lineHeight": 1.2
+                        },
+                        "elements": [
+                            {
+                                "id": "e60900e1-1800-4798-9bc3-c98d8b9d441e",
+                                "pageId": "47eda3fd-dd5f-4907-8d43-d5e494396173",
+                                "zoneId": "zone-1",
+                                "imageId": "8b6c3520-1e17-45f1-a569-18914d4db84b",
+                                "createdAt": "2026-04-06T08:39:41.478Z",
+                                "transform": {
+                                    "crop": {
+                                        "x": 0,
+                                        "y": 12.5,
+                                        "width": 100,
+                                        "height": 75
+                                    },
+                                    "scale": 1,
+                                    "fitMode": "cover",
+                                    "offsetX": 0,
+                                    "offsetY": 12.5,
+                                    "rotation": 0,
+                                    "layoutMode": "fill"
+                                }
+                            }
+                        ],
+                        "layoutId": "single-centered",
+                        "pageType": "content",
+                        "createdAt": "2026-04-06T08:15:05.569Z",
+                        "projectId": "bdenfph0u1bb7ladfteclcv4",
+                        "isEditable": true,
+                        "pageNumber": 6,
+                        "spineEnabled": false,
+                        "textElements": [],
+                        "backgroundColor": "#A7F3D0"
+                    },
+                    {
+                        "id": "2102d567-ba50-4a9c-b8ea-4405a010e7a7",
+                        "caption": {
+                            "text": "Hellooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo",
+                            "color": "#FFFFFF",
+                            "enabled": false,
+                            "lineHeight": 1.2
+                        },
+                        "elements": [
+                            {
+                                "id": "8247f3ae-8298-4e96-a75e-aa8bf19f0154",
+                                "pageId": "2102d567-ba50-4a9c-b8ea-4405a010e7a7",
+                                "zoneId": "zone-1",
+                                "imageId": "6a01490b-85a5-41e4-8240-3385226e8cfc",
+                                "createdAt": "2026-04-06T08:39:15.152Z",
+                                "transform": {
+                                    "scale": 1,
+                                    "fitMode": "cover",
+                                    "offsetX": 0,
+                                    "offsetY": 0,
+                                    "rotation": 0,
+                                    "layoutMode": "fill"
+                                }
+                            },
+                            {
+                                "id": "c94d3a7c-f8a6-4770-a531-bf3e201300a1",
+                                "pageId": "2102d567-ba50-4a9c-b8ea-4405a010e7a7",
+                                "zoneId": "zone-2",
+                                "imageId": "20d345f5-67a7-4345-8bc0-9dc9af5a733e",
+                                "createdAt": "2026-04-06T08:39:15.152Z",
+                                "transform": {
+                                    "scale": 1,
+                                    "fitMode": "cover",
+                                    "offsetX": 0,
+                                    "offsetY": 0,
+                                    "rotation": 0,
+                                    "layoutMode": "fill"
+                                }
+                            }
+                        ],
+                        "layoutId": "collage-2img-stacked-caption",
+                        "pageType": "content",
+                        "createdAt": "2026-04-06T08:15:05.570Z",
+                        "projectId": "bdenfph0u1bb7ladfteclcv4",
+                        "isEditable": true,
+                        "pageNumber": 7,
+                        "spineEnabled": false,
+                        "textElements": [],
+                        "backgroundColor": "#A7F3D0"
+                    },
+                    {
+                        "id": "a35b8bf2-99bc-4b39-ad22-b6bddfcfbcf6",
+                        "caption": {
+                            "text": "",
+                            "enabled": false,
+                            "lineHeight": 1.2
+                        },
+                        "elements": [
+                            {
+                                "id": "e64ee217-33c2-4669-9ab3-214bc3eef795",
+                                "pageId": "a35b8bf2-99bc-4b39-ad22-b6bddfcfbcf6",
+                                "zoneId": "zone-1",
+                                "imageId": "8054a94c-5d18-4626-87d9-28653831f665",
+                                "createdAt": "2026-04-08T09:20:13.503Z",
+                                "transform": {
+                                    "crop": {
+                                        "x": 0,
+                                        "y": 12.5,
+                                        "width": 100,
+                                        "height": 75
+                                    },
+                                    "scale": 1,
+                                    "fitMode": "cover",
+                                    "offsetX": 0,
+                                    "offsetY": 12.5,
+                                    "rotation": 0,
+                                    "layoutMode": "fill"
+                                }
+                            }
+                        ],
+                        "layoutId": "single-centered",
+                        "pageType": "content",
+                        "createdAt": "2026-04-06T08:15:05.571Z",
+                        "projectId": "bdenfph0u1bb7ladfteclcv4",
+                        "isEditable": true,
+                        "pageNumber": 8,
+                        "spineEnabled": false,
+                        "textElements": [],
+                        "backgroundColor": "#A7F3D0"
+                    },
+                    {
+                        "id": "da6bf27d-e8bc-4192-adee-2dc43ddc5297",
+                        "caption": {
+                            "text": "",
+                            "color": "#FFFFFF",
+                            "enabled": false,
+                            "lineHeight": 1.2
+                        },
+                        "elements": [
+                            {
+                                "id": "ad459d05-0b4e-4954-a507-5d5c26b840f2",
+                                "pageId": "da6bf27d-e8bc-4192-adee-2dc43ddc5297",
+                                "zoneId": "zone-1",
+                                "imageId": "4b8f5215-1c95-41b4-b824-0b3d036de331",
+                                "createdAt": "2026-04-06T09:58:10.946Z",
+                                "transform": {
+                                    "scale": 1,
+                                    "fitMode": "cover",
+                                    "offsetX": 0,
+                                    "offsetY": 0,
+                                    "rotation": 0,
+                                    "layoutMode": "fill"
+                                }
+                            },
+                            {
+                                "id": "c0d4bc2b-b08d-4ed6-a438-bc2743e59c56",
+                                "pageId": "da6bf27d-e8bc-4192-adee-2dc43ddc5297",
+                                "zoneId": "zone-2",
+                                "imageId": "ed45c374-9cd5-41e4-a463-46408e41fec4",
+                                "createdAt": "2026-04-06T09:58:10.946Z",
+                                "transform": {
+                                    "scale": 1,
+                                    "fitMode": "cover",
+                                    "offsetX": 0,
+                                    "offsetY": 0,
+                                    "rotation": 0,
+                                    "layoutMode": "fill"
+                                }
+                            },
+                            {
+                                "id": "77bfd8d3-6100-4e8b-8113-c5bbc1c469a5",
+                                "pageId": "da6bf27d-e8bc-4192-adee-2dc43ddc5297",
+                                "zoneId": "zone-3",
+                                "imageId": "d1f85145-fc29-49d8-bfe7-a4ae48ff2af8",
+                                "createdAt": "2026-04-06T09:58:10.946Z",
+                                "transform": {
+                                    "scale": 1,
+                                    "fitMode": "cover",
+                                    "offsetX": 0,
+                                    "offsetY": 0,
+                                    "rotation": 0,
+                                    "layoutMode": "fill"
+                                }
+                            }
+                        ],
+                        "layoutId": "collage-3img-1top2bottom",
+                        "pageType": "content",
+                        "createdAt": "2026-04-06T08:15:05.573Z",
+                        "projectId": "bdenfph0u1bb7ladfteclcv4",
+                        "isEditable": true,
+                        "pageNumber": 9,
+                        "spineEnabled": false,
+                        "textElements": [],
+                        "backgroundColor": "#A7F3D0"
+                    },
+                    {
+                        "id": "da254544-5428-47e4-a69e-37e82c985e4e",
+                        "caption": {
+                            "text": "",
+                            "enabled": false,
+                            "lineHeight": 1.2
+                        },
+                        "elements": [
+                            {
+                                "id": "1fc5fc9b-2442-4332-a6fd-d34b690f7a2f",
+                                "pageId": "da254544-5428-47e4-a69e-37e82c985e4e",
+                                "zoneId": "zone-1",
+                                "imageId": "c04cd1d7-2e2f-4fd2-abd6-1fdfe35f31d9",
+                                "createdAt": "2026-04-08T09:20:24.708Z",
+                                "transform": {
+                                    "scale": 1,
+                                    "fitMode": "cover",
+                                    "offsetX": 0,
+                                    "offsetY": 0,
+                                    "rotation": 0,
+                                    "layoutMode": "fill"
+                                }
+                            },
+                            {
+                                "id": "c3f2d1f4-07d0-4520-837a-d486d2c47551",
+                                "pageId": "da254544-5428-47e4-a69e-37e82c985e4e",
+                                "zoneId": "zone-2",
+                                "imageId": "666af224-4682-423c-9959-57da0e5268b8",
+                                "createdAt": "2026-04-08T09:20:26.745Z",
+                                "transform": {
+                                    "crop": {
+                                        "x": 0,
+                                        "y": 21.849999999999994,
+                                        "width": 100,
+                                        "height": 56.3
+                                    },
+                                    "scale": 1,
+                                    "fitMode": "cover",
+                                    "offsetX": 0,
+                                    "offsetY": 21.849999999999994,
+                                    "rotation": 0,
+                                    "layoutMode": "fill"
+                                }
+                            }
+                        ],
+                        "layoutId": "collage-2img-diagonal",
+                        "pageType": "content",
+                        "createdAt": "2026-04-06T08:15:05.574Z",
+                        "projectId": "bdenfph0u1bb7ladfteclcv4",
+                        "isEditable": true,
+                        "pageNumber": 10,
+                        "spineEnabled": false,
+                        "textElements": [],
+                        "backgroundColor": "#A7F3D0"
+                    },
+                    {
+                        "id": "fe097973-eb41-497b-8cad-f319dab988f7",
+                        "caption": {
+                            "text": "",
+                            "enabled": false,
+                            "lineHeight": 1.2
+                        },
+                        "elements": [
+                            {
+                                "id": "588b343b-3207-4d48-8f95-0e334cc5a74a",
+                                "pageId": "fe097973-eb41-497b-8cad-f319dab988f7",
+                                "zoneId": "zone-1",
+                                "imageId": "2c51ac5c-8b6b-45f1-8ced-2e469573e123",
+                                "createdAt": "2026-04-08T09:20:50.713Z",
+                                "transform": {
+                                    "crop": {
+                                        "x": 0,
+                                        "y": 12.5,
+                                        "width": 100,
+                                        "height": 75
+                                    },
+                                    "scale": 1,
+                                    "fitMode": "cover",
+                                    "offsetX": 0,
+                                    "offsetY": 12.5,
+                                    "rotation": 0,
+                                    "layoutMode": "fill"
+                                }
+                            }
+                        ],
+                        "layoutId": "single-centered",
+                        "pageType": "content",
+                        "createdAt": "2026-04-06T08:15:05.574Z",
+                        "projectId": "bdenfph0u1bb7ladfteclcv4",
+                        "isEditable": true,
+                        "pageNumber": 11,
+                        "spineEnabled": false,
+                        "textElements": [],
+                        "backgroundColor": "#A7F3D0"
+                    },
+                    {
+                        "id": "372c8c9f-ebd0-4b62-9e69-1462a9a29197",
+                        "caption": {
+                            "text": "",
+                            "enabled": false,
+                            "lineHeight": 1.2
+                        },
+                        "elements": [
+                            {
+                                "id": "487e7283-d5da-42b7-8f1f-e23a918187c5",
+                                "pageId": "372c8c9f-ebd0-4b62-9e69-1462a9a29197",
+                                "zoneId": "zone-1",
+                                "imageId": "20d345f5-67a7-4345-8bc0-9dc9af5a733e",
+                                "createdAt": "2026-04-08T09:21:00.590Z",
+                                "transform": {
+                                    "scale": 1,
+                                    "fitMode": "cover",
+                                    "offsetX": 0,
+                                    "offsetY": 0,
+                                    "rotation": 0,
+                                    "layoutMode": "fill"
+                                }
+                            },
+                            {
+                                "id": "7dfe4634-ab64-4fff-8ba6-358439207ec1",
+                                "pageId": "372c8c9f-ebd0-4b62-9e69-1462a9a29197",
+                                "zoneId": "zone-2",
+                                "imageId": "c04cd1d7-2e2f-4fd2-abd6-1fdfe35f31d9",
+                                "createdAt": "2026-04-08T09:21:02.919Z",
+                                "transform": {
+                                    "scale": 1,
+                                    "fitMode": "cover",
+                                    "offsetX": 0,
+                                    "offsetY": 0,
+                                    "rotation": 0,
+                                    "layoutMode": "fill"
+                                }
+                            },
+                            {
+                                "id": "59db61fc-3830-47d5-8542-b7b38fb93714",
+                                "pageId": "372c8c9f-ebd0-4b62-9e69-1462a9a29197",
+                                "zoneId": "zone-3",
+                                "imageId": "61aa9606-b4e3-42e4-8211-7e48d09d99f7",
+                                "createdAt": "2026-04-08T09:21:06.176Z",
+                                "transform": {
+                                    "crop": {
+                                        "x": 0,
+                                        "y": 22.48929439252336,
+                                        "width": 100,
+                                        "height": 55.021411214953275
+                                    },
+                                    "scale": 1,
+                                    "fitMode": "cover",
+                                    "offsetX": 0,
+                                    "offsetY": 22.48929439252336,
+                                    "rotation": 0,
+                                    "layoutMode": "fill"
+                                }
+                            }
+                        ],
+                        "layoutId": "collage-3img-1top2bottom",
+                        "pageType": "content",
+                        "createdAt": "2026-04-06T08:15:05.574Z",
+                        "projectId": "bdenfph0u1bb7ladfteclcv4",
+                        "isEditable": true,
+                        "pageNumber": 12,
+                        "spineEnabled": false,
+                        "textElements": [],
+                        "backgroundColor": "#A7F3D0"
+                    },
+                    {
+                        "id": "9f80a0aa-7275-4e7c-a96d-29bb477f17fa",
+                        "elements": [],
+                        "layoutId": "single-centered",
+                        "pageType": "content",
+                        "createdAt": "2026-04-06T08:15:05.575Z",
+                        "projectId": "bdenfph0u1bb7ladfteclcv4",
+                        "isEditable": false,
+                        "pageNumber": 13,
+                        "spineEnabled": false,
+                        "textElements": [],
+                        "backgroundColor": "#A7F3D0"
+                    },
+                    {
+                        "id": "57a0aa61-05a1-4aca-aef5-0f1606a5c1f8",
+                        "elements": [],
+                        "layoutId": "blank-page",
+                        "pageType": "cover-back",
+                        "createdAt": "2026-04-06T08:15:05.575Z",
+                        "projectId": "bdenfph0u1bb7ladfteclcv4",
+                        "isEditable": true,
+                        "pageNumber": 14,
+                        "spineEnabled": false,
+                        "textElements": [],
+                        "backgroundColor": "#FBCFE8",
+                        "backgroundImage": {
+                            "id": "94f1d43b-09cb-4cc7-97b3-8dc44c5c1221",
+                            "imageId": "fd223f79-8b07-46c6-9816-31a8bef6ba83",
+                            "transform": {
+                                "flipX": false,
+                                "flipY": false,
+                                "scale": 1,
+                                "fitMode": "cover",
+                                "offsetX": 0,
+                                "offsetY": 0,
+                                "opacity": 1,
+                                "rotation": 0
+                            },
+                            "storagePath": "https://assets.snapit.photo/albums/0c1d925a-adb4-4cc4-91f3-7ddf59edc37b/bg png.png"
+                        },
+                        "backCoverLogoUrl": "/assets/back-cover-logo/dark-back-cover-logo.png"
+                    }
+                ],
+                "coverData": {
+                    "coverPage": {
+                        "id": "06777ff3-a2fc-4659-a38a-28d7d54b4232",
+                        "elements": [
+                            {
+                                "id": "0912c175-c624-4c42-b9c0-8432e81f6495",
+                                "pageId": "06777ff3-a2fc-4659-a38a-28d7d54b4232",
+                                "zoneId": "zone-1",
+                                "imageId": "0bffb3e8-434f-4c7d-8cbe-2938ddd4f765",
+                                "createdAt": "2026-04-06T08:15:05.576Z",
+                                "transform": {
+                                    "flipX": false,
+                                    "flipY": false,
+                                    "scale": 1,
+                                    "fitMode": "cover",
+                                    "offsetX": 0,
+                                    "offsetY": 0,
+                                    "rotation": 0,
+                                    "layoutMode": "fill"
+                                }
+                            }
+                        ],
+                        "layoutId": "single-bottom",
+                        "pageType": "cover-front",
+                        "createdAt": "2026-04-06T08:15:05.563Z",
+                        "projectId": "bdenfph0u1bb7ladfteclcv4",
+                        "isEditable": true,
+                        "pageNumber": 0,
+                        "spineEnabled": false,
+                        "textElements": [
+                            {
+                                "id": "bc95e56c-3442-44b0-9461-98f647d944b1",
+                                "color": "#000000",
+                                "width": 70,
+                                "pageId": "06777ff3-a2fc-4659-a38a-28d7d54b4232",
+                                "content": "",
+                                "fontSize": 24,
+                                "position": {
+                                    "x": 52.052238805970156,
+                                    "y": 19.029850746268657
+                                },
+                                "rotation": 0,
+                                "createdAt": "2026-04-06T08:15:05.562Z",
+                                "fontStyle": "normal",
+                                "textAlign": "center",
+                                "fontFamily": "Arial, sans-serif",
+                                "fontWeight": "normal"
+                            },
+                            {
+                                "id": "0c39d5b5-5bc1-4af3-b644-3307ea2977f1",
+                                "color": "#000000",
+                                "width": 70,
+                                "pageId": "06777ff3-a2fc-4659-a38a-28d7d54b4232",
+                                "content": "",
+                                "fontSize": 40,
+                                "position": {
+                                    "x": 49.8134328358209,
+                                    "y": 8.208955223880597
+                                },
+                                "rotation": 0,
+                                "createdAt": "2026-04-06T08:15:05.562Z",
+                                "fontStyle": "normal",
+                                "textAlign": "center",
+                                "fontFamily": "Arial, sans-serif",
+                                "fontWeight": "normal"
+                            }
+                        ],
+                        "backgroundColor": "#FBCFE8"
+                    },
+                    "projectImages": [
+                        {
+                            "imageId": "0bffb3e8-434f-4c7d-8cbe-2938ddd4f765",
+                            "imageUrl": "https://snapit-dev.s3.ap-south-1.amazonaws.com/albums/bdenfph0u1bb7ladfteclcv4/1000211314.jpg"
+                        },
+                        {
+                            "imageId": "c04cd1d7-2e2f-4fd2-abd6-1fdfe35f31d9",
+                            "imageUrl": "https://snapit-dev.s3.ap-south-1.amazonaws.com/albums/bdenfph0u1bb7ladfteclcv4/1000211315.jpg"
+                        },
+                        {
+                            "imageId": "666af224-4682-423c-9959-57da0e5268b8",
+                            "imageUrl": "https://snapit-dev.s3.ap-south-1.amazonaws.com/albums/bdenfph0u1bb7ladfteclcv4/1000211304.jpg"
+                        },
+                        {
+                            "imageId": "29dc516e-4f79-4637-9792-d3724c7eb9e1",
+                            "imageUrl": "https://snapit-dev.s3.ap-south-1.amazonaws.com/albums/bdenfph0u1bb7ladfteclcv4/1000211290.jpg"
+                        },
+                        {
+                            "imageId": "61aa9606-b4e3-42e4-8211-7e48d09d99f7",
+                            "imageUrl": "https://snapit-dev.s3.ap-south-1.amazonaws.com/albums/bdenfph0u1bb7ladfteclcv4/1000210993.jpg"
+                        },
+                        {
+                            "imageId": "20d345f5-67a7-4345-8bc0-9dc9af5a733e",
+                            "imageUrl": "https://snapit-dev.s3.ap-south-1.amazonaws.com/albums/bdenfph0u1bb7ladfteclcv4/1000202022.jpg"
+                        },
+                        {
+                            "imageId": "6a01490b-85a5-41e4-8240-3385226e8cfc",
+                            "imageUrl": "https://snapit-dev.s3.ap-south-1.amazonaws.com/albums/bdenfph0u1bb7ladfteclcv4/1000202140.jpg"
+                        },
+                        {
+                            "imageId": "8cdbabff-5898-4b5a-938f-6be8124e216d",
+                            "imageUrl": "https://snapit-dev.s3.ap-south-1.amazonaws.com/albums/bdenfph0u1bb7ladfteclcv4/1000202138.jpg"
+                        },
+                        {
+                            "imageId": "ed45c374-9cd5-41e4-a463-46408e41fec4",
+                            "imageUrl": "https://snapit-dev.s3.ap-south-1.amazonaws.com/albums/bdenfph0u1bb7ladfteclcv4/1000195335.jpg"
+                        },
+                        {
+                            "imageId": "b5237990-f7f1-4827-98e5-9331ebc6f937",
+                            "imageUrl": "https://snapit-dev.s3.ap-south-1.amazonaws.com/albums/bdenfph0u1bb7ladfteclcv4/1000204515.jpg"
+                        },
+                        {
+                            "imageId": "4b8f5215-1c95-41b4-b824-0b3d036de331",
+                            "imageUrl": "https://snapit-dev.s3.ap-south-1.amazonaws.com/albums/bdenfph0u1bb7ladfteclcv4/1000204091.jpg"
+                        },
+                        {
+                            "imageId": "56d1975a-de95-4043-bb11-449cb2ce9a89",
+                            "imageUrl": "https://snapit-dev.s3.ap-south-1.amazonaws.com/albums/bdenfph0u1bb7ladfteclcv4/1000202018.jpg"
+                        },
+                        {
+                            "imageId": "8054a94c-5d18-4626-87d9-28653831f665",
+                            "imageUrl": "https://snapit-dev.s3.ap-south-1.amazonaws.com/albums/bdenfph0u1bb7ladfteclcv4/1000195326.jpg"
+                        },
+                        {
+                            "imageId": "2c51ac5c-8b6b-45f1-8ced-2e469573e123",
+                            "imageUrl": "https://snapit-dev.s3.ap-south-1.amazonaws.com/albums/bdenfph0u1bb7ladfteclcv4/1000193519.jpg"
+                        },
+                        {
+                            "imageId": "8b6c3520-1e17-45f1-a569-18914d4db84b",
+                            "imageUrl": "https://snapit-dev.s3.ap-south-1.amazonaws.com/albums/bdenfph0u1bb7ladfteclcv4/1000204100.jpg"
+                        },
+                        {
+                            "imageId": "d1f85145-fc29-49d8-bfe7-a4ae48ff2af8",
+                            "imageUrl": "https://snapit-dev.s3.ap-south-1.amazonaws.com/albums/bdenfph0u1bb7ladfteclcv4/1000202068.jpg"
+                        },
+                        {
+                            "imageId": "f1f3f80d-05e4-4268-a1c7-085d03181273",
+                            "imageUrl": "https://snapit-dev.s3.ap-south-1.amazonaws.com/albums/bdenfph0u1bb7ladfteclcv4/1000204093.jpg"
+                        }
+                    ]
+                },
+                "capturedAt": "2026-04-08T12:13:30.831Z"
+            },
+            "printFileUrl": null,
+            "orderItemStatus": "pending",
+            "photoExportStatus": "pending",
+            "photoExportUrls": null,
+            "photoExportUpdatedAt": null,
+            "photoExportError": null,
+            "createdAt": "2026-04-08T12:13:31.333Z",
+            "updatedAt": "2026-04-08T12:13:31.333Z",
+            "publishedAt": "2026-04-08T12:13:30.893Z",
+            "locale": null,
+            "templateVariant": {
+                "id": 75,
+                "documentId": "c08d2qwcld1y0jsxid56kgjk",
+                "basePrice": 1250,
+                "pricePerPage": 75,
+                "sku": "ROSE-BK_10X10-CV_HRD-PP_GLS",
+                "barcode": "",
+                "stockQuantity": 1000,
+                "stockStatus": "in_stock",
+                "lowStockThreshold": 10,
+                "trackInventory": true,
+                "allowBackorder": false,
+                "isDefault": false,
+                "isAvailable": true,
+                "displayOrder": 0,
+                "createdAt": "2026-01-03T06:48:33.431Z",
+                "updatedAt": "2026-01-03T06:48:33.431Z",
+                "publishedAt": "2026-01-03T06:48:33.419Z",
+                "locale": null
+            },
+            "project": {
+                "id": 529,
+                "documentId": "bdenfph0u1bb7ladfteclcv4",
+                "name": "Rose",
+                "pages": [
+                    {
+                        "id": "06777ff3-a2fc-4659-a38a-28d7d54b4232",
+                        "elements": [
+                            {
+                                "id": "0912c175-c624-4c42-b9c0-8432e81f6495",
+                                "pageId": "06777ff3-a2fc-4659-a38a-28d7d54b4232",
+                                "zoneId": "zone-1",
+                                "imageId": "0bffb3e8-434f-4c7d-8cbe-2938ddd4f765",
+                                "createdAt": "2026-04-06T08:15:05.576Z",
+                                "transform": {
+                                    "flipX": false,
+                                    "flipY": false,
+                                    "scale": 1,
+                                    "fitMode": "cover",
+                                    "offsetX": 0,
+                                    "offsetY": 0,
+                                    "rotation": 0,
+                                    "layoutMode": "fill"
+                                }
+                            }
+                        ],
+                        "layoutId": "single-bottom",
+                        "pageType": "cover-front",
+                        "createdAt": "2026-04-06T08:15:05.563Z",
+                        "projectId": "bdenfph0u1bb7ladfteclcv4",
+                        "isEditable": true,
+                        "pageNumber": 0,
+                        "spineEnabled": false,
+                        "textElements": [
+                            {
+                                "id": "bc95e56c-3442-44b0-9461-98f647d944b1",
+                                "color": "#000000",
+                                "width": 70,
+                                "pageId": "06777ff3-a2fc-4659-a38a-28d7d54b4232",
+                                "content": "",
+                                "fontSize": 24,
+                                "position": {
+                                    "x": 52.052238805970156,
+                                    "y": 19.029850746268657
+                                },
+                                "rotation": 0,
+                                "createdAt": "2026-04-06T08:15:05.562Z",
+                                "fontStyle": "normal",
+                                "textAlign": "center",
+                                "fontFamily": "Arial, sans-serif",
+                                "fontWeight": "normal"
+                            },
+                            {
+                                "id": "0c39d5b5-5bc1-4af3-b644-3307ea2977f1",
+                                "color": "#000000",
+                                "width": 70,
+                                "pageId": "06777ff3-a2fc-4659-a38a-28d7d54b4232",
+                                "content": "",
+                                "fontSize": 40,
+                                "position": {
+                                    "x": 49.8134328358209,
+                                    "y": 8.208955223880597
+                                },
+                                "rotation": 0,
+                                "createdAt": "2026-04-06T08:15:05.562Z",
+                                "fontStyle": "normal",
+                                "textAlign": "center",
+                                "fontFamily": "Arial, sans-serif",
+                                "fontWeight": "normal"
+                            }
+                        ],
+                        "backgroundColor": "#FBCFE8"
+                    },
+                    {
+                        "id": "901f511a-5368-49f6-9e34-110ce87645a1",
+                        "elements": [],
+                        "layoutId": "single-full",
+                        "pageType": "content",
+                        "createdAt": "2026-04-06T08:15:05.564Z",
+                        "projectId": "bdenfph0u1bb7ladfteclcv4",
+                        "isEditable": false,
+                        "pageNumber": 1,
+                        "spineEnabled": false,
+                        "textElements": [],
+                        "backgroundColor": "#A7F3D0"
+                    },
+                    {
+                        "id": "98ae964a-fc92-4bf1-a7ea-b199cb21f2b3",
+                        "elements": [
+                            {
+                                "id": "81925273-3066-498a-bebb-8dbe8412698e",
+                                "pageId": "98ae964a-fc92-4bf1-a7ea-b199cb21f2b3",
+                                "zoneId": "zone-1",
+                                "imageId": "666af224-4682-423c-9959-57da0e5268b8",
+                                "createdAt": "2026-04-06T08:15:05.576Z",
+                                "transform": {
+                                    "flipX": false,
+                                    "flipY": false,
+                                    "scale": 1,
+                                    "fitMode": "cover",
+                                    "offsetX": 0,
+                                    "offsetY": 0,
+                                    "rotation": 0,
+                                    "layoutMode": "fill"
+                                }
+                            }
+                        ],
+                        "layoutId": "single-centered",
+                        "pageType": "content",
+                        "createdAt": "2026-04-06T08:15:05.566Z",
+                        "projectId": "bdenfph0u1bb7ladfteclcv4",
+                        "isEditable": true,
+                        "pageNumber": 2,
+                        "spineEnabled": false,
+                        "textElements": [],
+                        "backgroundColor": "#A7F3D0"
+                    },
+                    {
+                        "id": "8d6923c2-836e-466c-b253-3b58f843db88",
+                        "caption": {
+                            "text": "hey ",
+                            "color": "#FFFFFF",
+                            "enabled": false,
+                            "fontFamily": "\"League Spartan\", sans-serif",
+                            "lineHeight": 1.2
+                        },
+                        "elements": [
+                            {
+                                "id": "d2536312-3bf1-44ba-8910-c88237592b79",
+                                "pageId": "8d6923c2-836e-466c-b253-3b58f843db88",
+                                "zoneId": "zone-1",
+                                "imageId": "29dc516e-4f79-4637-9792-d3724c7eb9e1",
+                                "createdAt": "2026-04-06T08:52:48.474Z",
+                                "transform": {
+                                    "flipX": false,
+                                    "flipY": false,
+                                    "scale": 1,
+                                    "fitMode": "cover",
+                                    "offsetX": 0,
+                                    "offsetY": 0,
+                                    "rotation": 0,
+                                    "layoutMode": "fill"
+                                }
+                            }
+                        ],
+                        "layoutId": "single-centered-caption",
+                        "pageType": "content",
+                        "createdAt": "2026-04-06T08:15:05.567Z",
+                        "projectId": "bdenfph0u1bb7ladfteclcv4",
+                        "isEditable": true,
+                        "pageNumber": 3,
+                        "spineEnabled": false,
+                        "textElements": [],
+                        "backgroundColor": "#A7F3D0"
+                    },
+                    {
+                        "id": "6c50e814-89b5-489e-9ea7-27bd5d62854e",
+                        "caption": {
+                            "text": "get",
+                            "enabled": true,
+                            "lineHeight": 1.2
+                        },
+                        "elements": [
+                            {
+                                "id": "f1a0402b-4a30-418b-8d88-8854ce28a109",
+                                "pageId": "6c50e814-89b5-489e-9ea7-27bd5d62854e",
+                                "zoneId": "zone-1",
+                                "imageId": "61aa9606-b4e3-42e4-8211-7e48d09d99f7",
+                                "createdAt": "2026-04-08T09:22:37.689Z",
+                                "transform": {
+                                    "flipX": false,
+                                    "flipY": false,
+                                    "scale": 1,
+                                    "fitMode": "cover",
+                                    "offsetX": 0,
+                                    "offsetY": 0,
+                                    "rotation": 0,
+                                    "layoutMode": "fill"
+                                }
+                            }
+                        ],
+                        "layoutId": "single-centered-caption",
+                        "pageType": "content",
+                        "createdAt": "2026-04-06T08:15:05.568Z",
+                        "projectId": "bdenfph0u1bb7ladfteclcv4",
+                        "isEditable": true,
+                        "pageNumber": 4,
+                        "spineEnabled": false,
+                        "textElements": [],
+                        "backgroundColor": "#A7F3D0"
+                    },
+                    {
+                        "id": "0f46dbe8-9f9c-42da-a563-804fcf4ac10b",
+                        "caption": {
+                            "text": "",
+                            "color": "#FFFFFF",
+                            "enabled": false,
+                            "lineHeight": 1.2
+                        },
+                        "elements": [
+                            {
+                                "id": "30d8a15d-cc8f-4521-ae8b-6c29afcc72f1",
+                                "pageId": "0f46dbe8-9f9c-42da-a563-804fcf4ac10b",
+                                "zoneId": "zone-1",
+                                "imageId": "8cdbabff-5898-4b5a-938f-6be8124e216d",
+                                "createdAt": "2026-04-06T08:23:29.064Z",
+                                "transform": {
+                                    "crop": {
+                                        "x": 0,
+                                        "y": 39.18716283908755,
+                                        "width": 100,
+                                        "height": 36.66584463625154
+                                    },
+                                    "scale": 1,
+                                    "fitMode": "cover",
+                                    "offsetX": 0,
+                                    "offsetY": 39.18716283908755,
+                                    "rotation": 0,
+                                    "layoutMode": "fill"
+                                }
+                            },
+                            {
+                                "id": "36fd0cac-508f-45c4-9c53-383d627d9fb7",
+                                "pageId": "0f46dbe8-9f9c-42da-a563-804fcf4ac10b",
+                                "zoneId": "zone-2",
+                                "imageId": "b5237990-f7f1-4827-98e5-9331ebc6f937",
+                                "createdAt": "2026-04-06T08:23:29.065Z",
+                                "transform": {
+                                    "crop": {
+                                        "x": 0,
+                                        "y": 10.32295519934237,
+                                        "width": 100.00000000000003,
+                                        "height": 65.18372379778053
+                                    },
+                                    "scale": 1,
+                                    "fitMode": "cover",
+                                    "offsetX": 0,
+                                    "offsetY": 10.32295519934237,
+                                    "rotation": 0,
+                                    "layoutMode": "fill"
+                                }
+                            }
+                        ],
+                        "layoutId": "collage-2img-stacked",
+                        "pageType": "content",
+                        "createdAt": "2026-04-06T08:15:05.569Z",
+                        "projectId": "bdenfph0u1bb7ladfteclcv4",
+                        "isEditable": true,
+                        "pageNumber": 5,
+                        "spineEnabled": false,
+                        "textElements": [],
+                        "backgroundColor": "#A7F3D0"
+                    },
+                    {
+                        "id": "47eda3fd-dd5f-4907-8d43-d5e494396173",
+                        "caption": {
+                            "text": "helllo",
+                            "color": "#FFFFFF",
+                            "enabled": true,
+                            "lineHeight": 1.2
+                        },
+                        "elements": [
+                            {
+                                "id": "e60900e1-1800-4798-9bc3-c98d8b9d441e",
+                                "pageId": "47eda3fd-dd5f-4907-8d43-d5e494396173",
+                                "zoneId": "zone-1",
+                                "imageId": "8b6c3520-1e17-45f1-a569-18914d4db84b",
+                                "createdAt": "2026-04-06T08:39:41.478Z",
+                                "transform": {
+                                    "crop": {
+                                        "x": 0,
+                                        "y": 12.5,
+                                        "width": 100,
+                                        "height": 75
+                                    },
+                                    "scale": 1,
+                                    "fitMode": "cover",
+                                    "offsetX": 0,
+                                    "offsetY": 12.5,
+                                    "rotation": 0,
+                                    "layoutMode": "fill"
+                                }
+                            }
+                        ],
+                        "layoutId": "single-centered",
+                        "pageType": "content",
+                        "createdAt": "2026-04-06T08:15:05.569Z",
+                        "projectId": "bdenfph0u1bb7ladfteclcv4",
+                        "isEditable": true,
+                        "pageNumber": 6,
+                        "spineEnabled": false,
+                        "textElements": [],
+                        "backgroundColor": "#A7F3D0"
+                    },
+                    {
+                        "id": "2102d567-ba50-4a9c-b8ea-4405a010e7a7",
+                        "caption": {
+                            "text": "Hellooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo",
+                            "color": "#FFFFFF",
+                            "enabled": false,
+                            "lineHeight": 1.2
+                        },
+                        "elements": [
+                            {
+                                "id": "8247f3ae-8298-4e96-a75e-aa8bf19f0154",
+                                "pageId": "2102d567-ba50-4a9c-b8ea-4405a010e7a7",
+                                "zoneId": "zone-1",
+                                "imageId": "6a01490b-85a5-41e4-8240-3385226e8cfc",
+                                "createdAt": "2026-04-06T08:39:15.152Z",
+                                "transform": {
+                                    "scale": 1,
+                                    "fitMode": "cover",
+                                    "offsetX": 0,
+                                    "offsetY": 0,
+                                    "rotation": 0,
+                                    "layoutMode": "fill"
+                                }
+                            },
+                            {
+                                "id": "c94d3a7c-f8a6-4770-a531-bf3e201300a1",
+                                "pageId": "2102d567-ba50-4a9c-b8ea-4405a010e7a7",
+                                "zoneId": "zone-2",
+                                "imageId": "20d345f5-67a7-4345-8bc0-9dc9af5a733e",
+                                "createdAt": "2026-04-06T08:39:15.152Z",
+                                "transform": {
+                                    "scale": 1,
+                                    "fitMode": "cover",
+                                    "offsetX": 0,
+                                    "offsetY": 0,
+                                    "rotation": 0,
+                                    "layoutMode": "fill"
+                                }
+                            }
+                        ],
+                        "layoutId": "collage-2img-stacked-caption",
+                        "pageType": "content",
+                        "createdAt": "2026-04-06T08:15:05.570Z",
+                        "projectId": "bdenfph0u1bb7ladfteclcv4",
+                        "isEditable": true,
+                        "pageNumber": 7,
+                        "spineEnabled": false,
+                        "textElements": [],
+                        "backgroundColor": "#A7F3D0"
+                    },
+                    {
+                        "id": "a35b8bf2-99bc-4b39-ad22-b6bddfcfbcf6",
+                        "caption": {
+                            "text": "",
+                            "enabled": false,
+                            "lineHeight": 1.2
+                        },
+                        "elements": [
+                            {
+                                "id": "e64ee217-33c2-4669-9ab3-214bc3eef795",
+                                "pageId": "a35b8bf2-99bc-4b39-ad22-b6bddfcfbcf6",
+                                "zoneId": "zone-1",
+                                "imageId": "8054a94c-5d18-4626-87d9-28653831f665",
+                                "createdAt": "2026-04-08T09:20:13.503Z",
+                                "transform": {
+                                    "crop": {
+                                        "x": 0,
+                                        "y": 12.5,
+                                        "width": 100,
+                                        "height": 75
+                                    },
+                                    "scale": 1,
+                                    "fitMode": "cover",
+                                    "offsetX": 0,
+                                    "offsetY": 12.5,
+                                    "rotation": 0,
+                                    "layoutMode": "fill"
+                                }
+                            }
+                        ],
+                        "layoutId": "single-centered",
+                        "pageType": "content",
+                        "createdAt": "2026-04-06T08:15:05.571Z",
+                        "projectId": "bdenfph0u1bb7ladfteclcv4",
+                        "isEditable": true,
+                        "pageNumber": 8,
+                        "spineEnabled": false,
+                        "textElements": [],
+                        "backgroundColor": "#A7F3D0"
+                    },
+                    {
+                        "id": "da6bf27d-e8bc-4192-adee-2dc43ddc5297",
+                        "caption": {
+                            "text": "",
+                            "color": "#FFFFFF",
+                            "enabled": false,
+                            "lineHeight": 1.2
+                        },
+                        "elements": [
+                            {
+                                "id": "ad459d05-0b4e-4954-a507-5d5c26b840f2",
+                                "pageId": "da6bf27d-e8bc-4192-adee-2dc43ddc5297",
+                                "zoneId": "zone-1",
+                                "imageId": "4b8f5215-1c95-41b4-b824-0b3d036de331",
+                                "createdAt": "2026-04-06T09:58:10.946Z",
+                                "transform": {
+                                    "scale": 1,
+                                    "fitMode": "cover",
+                                    "offsetX": 0,
+                                    "offsetY": 0,
+                                    "rotation": 0,
+                                    "layoutMode": "fill"
+                                }
+                            },
+                            {
+                                "id": "c0d4bc2b-b08d-4ed6-a438-bc2743e59c56",
+                                "pageId": "da6bf27d-e8bc-4192-adee-2dc43ddc5297",
+                                "zoneId": "zone-2",
+                                "imageId": "ed45c374-9cd5-41e4-a463-46408e41fec4",
+                                "createdAt": "2026-04-06T09:58:10.946Z",
+                                "transform": {
+                                    "scale": 1,
+                                    "fitMode": "cover",
+                                    "offsetX": 0,
+                                    "offsetY": 0,
+                                    "rotation": 0,
+                                    "layoutMode": "fill"
+                                }
+                            },
+                            {
+                                "id": "77bfd8d3-6100-4e8b-8113-c5bbc1c469a5",
+                                "pageId": "da6bf27d-e8bc-4192-adee-2dc43ddc5297",
+                                "zoneId": "zone-3",
+                                "imageId": "d1f85145-fc29-49d8-bfe7-a4ae48ff2af8",
+                                "createdAt": "2026-04-06T09:58:10.946Z",
+                                "transform": {
+                                    "scale": 1,
+                                    "fitMode": "cover",
+                                    "offsetX": 0,
+                                    "offsetY": 0,
+                                    "rotation": 0,
+                                    "layoutMode": "fill"
+                                }
+                            }
+                        ],
+                        "layoutId": "collage-3img-1top2bottom",
+                        "pageType": "content",
+                        "createdAt": "2026-04-06T08:15:05.573Z",
+                        "projectId": "bdenfph0u1bb7ladfteclcv4",
+                        "isEditable": true,
+                        "pageNumber": 9,
+                        "spineEnabled": false,
+                        "textElements": [],
+                        "backgroundColor": "#A7F3D0"
+                    },
+                    {
+                        "id": "da254544-5428-47e4-a69e-37e82c985e4e",
+                        "caption": {
+                            "text": "",
+                            "enabled": false,
+                            "lineHeight": 1.2
+                        },
+                        "elements": [
+                            {
+                                "id": "1fc5fc9b-2442-4332-a6fd-d34b690f7a2f",
+                                "pageId": "da254544-5428-47e4-a69e-37e82c985e4e",
+                                "zoneId": "zone-1",
+                                "imageId": "c04cd1d7-2e2f-4fd2-abd6-1fdfe35f31d9",
+                                "createdAt": "2026-04-08T09:20:24.708Z",
+                                "transform": {
+                                    "scale": 1,
+                                    "fitMode": "cover",
+                                    "offsetX": 0,
+                                    "offsetY": 0,
+                                    "rotation": 0,
+                                    "layoutMode": "fill"
+                                }
+                            },
+                            {
+                                "id": "c3f2d1f4-07d0-4520-837a-d486d2c47551",
+                                "pageId": "da254544-5428-47e4-a69e-37e82c985e4e",
+                                "zoneId": "zone-2",
+                                "imageId": "666af224-4682-423c-9959-57da0e5268b8",
+                                "createdAt": "2026-04-08T09:20:26.745Z",
+                                "transform": {
+                                    "crop": {
+                                        "x": 0,
+                                        "y": 21.849999999999994,
+                                        "width": 100,
+                                        "height": 56.3
+                                    },
+                                    "scale": 1,
+                                    "fitMode": "cover",
+                                    "offsetX": 0,
+                                    "offsetY": 21.849999999999994,
+                                    "rotation": 0,
+                                    "layoutMode": "fill"
+                                }
+                            }
+                        ],
+                        "layoutId": "collage-2img-diagonal",
+                        "pageType": "content",
+                        "createdAt": "2026-04-06T08:15:05.574Z",
+                        "projectId": "bdenfph0u1bb7ladfteclcv4",
+                        "isEditable": true,
+                        "pageNumber": 10,
+                        "spineEnabled": false,
+                        "textElements": [],
+                        "backgroundColor": "#A7F3D0"
+                    },
+                    {
+                        "id": "fe097973-eb41-497b-8cad-f319dab988f7",
+                        "caption": {
+                            "text": "",
+                            "enabled": false,
+                            "lineHeight": 1.2
+                        },
+                        "elements": [
+                            {
+                                "id": "588b343b-3207-4d48-8f95-0e334cc5a74a",
+                                "pageId": "fe097973-eb41-497b-8cad-f319dab988f7",
+                                "zoneId": "zone-1",
+                                "imageId": "2c51ac5c-8b6b-45f1-8ced-2e469573e123",
+                                "createdAt": "2026-04-08T09:20:50.713Z",
+                                "transform": {
+                                    "crop": {
+                                        "x": 0,
+                                        "y": 12.5,
+                                        "width": 100,
+                                        "height": 75
+                                    },
+                                    "scale": 1,
+                                    "fitMode": "cover",
+                                    "offsetX": 0,
+                                    "offsetY": 12.5,
+                                    "rotation": 0,
+                                    "layoutMode": "fill"
+                                }
+                            }
+                        ],
+                        "layoutId": "single-centered",
+                        "pageType": "content",
+                        "createdAt": "2026-04-06T08:15:05.574Z",
+                        "projectId": "bdenfph0u1bb7ladfteclcv4",
+                        "isEditable": true,
+                        "pageNumber": 11,
+                        "spineEnabled": false,
+                        "textElements": [],
+                        "backgroundColor": "#A7F3D0"
+                    },
+                    {
+                        "id": "372c8c9f-ebd0-4b62-9e69-1462a9a29197",
+                        "caption": {
+                            "text": "",
+                            "enabled": false,
+                            "lineHeight": 1.2
+                        },
+                        "elements": [
+                            {
+                                "id": "487e7283-d5da-42b7-8f1f-e23a918187c5",
+                                "pageId": "372c8c9f-ebd0-4b62-9e69-1462a9a29197",
+                                "zoneId": "zone-1",
+                                "imageId": "20d345f5-67a7-4345-8bc0-9dc9af5a733e",
+                                "createdAt": "2026-04-08T09:21:00.590Z",
+                                "transform": {
+                                    "scale": 1,
+                                    "fitMode": "cover",
+                                    "offsetX": 0,
+                                    "offsetY": 0,
+                                    "rotation": 0,
+                                    "layoutMode": "fill"
+                                }
+                            },
+                            {
+                                "id": "7dfe4634-ab64-4fff-8ba6-358439207ec1",
+                                "pageId": "372c8c9f-ebd0-4b62-9e69-1462a9a29197",
+                                "zoneId": "zone-2",
+                                "imageId": "c04cd1d7-2e2f-4fd2-abd6-1fdfe35f31d9",
+                                "createdAt": "2026-04-08T09:21:02.919Z",
+                                "transform": {
+                                    "scale": 1,
+                                    "fitMode": "cover",
+                                    "offsetX": 0,
+                                    "offsetY": 0,
+                                    "rotation": 0,
+                                    "layoutMode": "fill"
+                                }
+                            },
+                            {
+                                "id": "59db61fc-3830-47d5-8542-b7b38fb93714",
+                                "pageId": "372c8c9f-ebd0-4b62-9e69-1462a9a29197",
+                                "zoneId": "zone-3",
+                                "imageId": "61aa9606-b4e3-42e4-8211-7e48d09d99f7",
+                                "createdAt": "2026-04-08T09:21:06.176Z",
+                                "transform": {
+                                    "crop": {
+                                        "x": 0,
+                                        "y": 22.48929439252336,
+                                        "width": 100,
+                                        "height": 55.021411214953275
+                                    },
+                                    "scale": 1,
+                                    "fitMode": "cover",
+                                    "offsetX": 0,
+                                    "offsetY": 22.48929439252336,
+                                    "rotation": 0,
+                                    "layoutMode": "fill"
+                                }
+                            }
+                        ],
+                        "layoutId": "collage-3img-1top2bottom",
+                        "pageType": "content",
+                        "createdAt": "2026-04-06T08:15:05.574Z",
+                        "projectId": "bdenfph0u1bb7ladfteclcv4",
+                        "isEditable": true,
+                        "pageNumber": 12,
+                        "spineEnabled": false,
+                        "textElements": [],
+                        "backgroundColor": "#A7F3D0"
+                    },
+                    {
+                        "id": "9f80a0aa-7275-4e7c-a96d-29bb477f17fa",
+                        "elements": [],
+                        "layoutId": "single-centered",
+                        "pageType": "content",
+                        "createdAt": "2026-04-06T08:15:05.575Z",
+                        "projectId": "bdenfph0u1bb7ladfteclcv4",
+                        "isEditable": false,
+                        "pageNumber": 13,
+                        "spineEnabled": false,
+                        "textElements": [],
+                        "backgroundColor": "#A7F3D0"
+                    },
+                    {
+                        "id": "57a0aa61-05a1-4aca-aef5-0f1606a5c1f8",
+                        "elements": [],
+                        "layoutId": "blank-page",
+                        "pageType": "cover-back",
+                        "createdAt": "2026-04-06T08:15:05.575Z",
+                        "projectId": "bdenfph0u1bb7ladfteclcv4",
+                        "isEditable": true,
+                        "pageNumber": 14,
+                        "spineEnabled": false,
+                        "textElements": [],
+                        "backgroundColor": "#FBCFE8",
+                        "backgroundImage": {
+                            "id": "94f1d43b-09cb-4cc7-97b3-8dc44c5c1221",
+                            "imageId": "fd223f79-8b07-46c6-9816-31a8bef6ba83",
+                            "transform": {
+                                "flipX": false,
+                                "flipY": false,
+                                "scale": 1,
+                                "fitMode": "cover",
+                                "offsetX": 0,
+                                "offsetY": 0,
+                                "opacity": 1,
+                                "rotation": 0
+                            },
+                            "storagePath": "https://assets.snapit.photo/albums/0c1d925a-adb4-4cc4-91f3-7ddf59edc37b/bg png.png"
+                        },
+                        "backCoverLogoUrl": "/assets/back-cover-logo/dark-back-cover-logo.png"
+                    }
+                ],
+                "coverData": {
+                    "date": "2026-04-06",
+                    "title": "My Photobook",
+                    "subtitle": ""
+                },
+                "projectStatus": "completed",
+                "pageCount": 11,
+                "lastEditedPage": 0,
+                "progress": 100,
+                "lastEditedAt": "2026-04-08T09:25:20.160Z",
+                "lockedForOrder": true,
+                "version": 1,
+                "createdAt": "2026-04-06T08:12:38.126Z",
+                "updatedAt": "2026-04-08T12:13:32.022Z",
+                "publishedAt": "2026-04-08T12:13:31.955Z",
+                "locale": null,
+                "totalImagesUploaded": 17,
+                "imagesInUse": 15,
+                "imagesQualified": 15
+            }
+        }
+    ],
+    "user": {
+        "id": 18,
+        "documentId": "at8zho58li5kg0vcjn2fumvg",
+        "username": "6376078496",
+        "email": "916376078496@placeholder.com",
+        "provider": "local",
+        "password": null,
+        "resetPasswordToken": null,
+        "confirmationToken": null,
+        "confirmed": true,
+        "blocked": false,
+        "phone": "6376078496",
+        "phoneVerified": true,
+        "createdAt": "2025-12-20T06:02:38.887Z",
+        "updatedAt": "2026-04-08T09:19:29.615Z",
+        "publishedAt": "2026-01-07T07:43:38.921Z",
+        "locale": null,
+        "utm_source": null,
+        "utm_medium": null,
+        "utm_campaign": null
+    }
+}

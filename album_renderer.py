@@ -181,6 +181,7 @@ class AlbumPage:
     backgroundImageId: Optional[str] = None
     elements: Optional[List[Dict[str, Any]]] = None
     textElements: Optional[List[Dict[str, Any]]] = None
+    caption: Optional[Dict[str, Any]] = None  # {enabled, text, fontFamily?, fontSize?, fontWeight?, textAlign?}
     backCoverLogoUrl: Optional[str] = None
 
 @dataclass
@@ -195,9 +196,17 @@ class LayoutZone:
     size: Dict[str, float]      # {"width": float, "height": float}
 
 @dataclass
+class CaptionZoneDef:
+    position: Dict[str, float]  # {"x": float, "y": float}
+    size: Dict[str, float]      # {"width": float, "height": float}
+
+@dataclass
 class LayoutDef:
     id: str
     zones: List[LayoutZone]
+    hasCaption: bool = False
+    captionZone: Optional[CaptionZoneDef] = None
+    captionVariantId: Optional[str] = None
 
 @dataclass
 class RenderedPage:
@@ -227,9 +236,23 @@ def load_layouts_by_id(layouts_path: Optional[Path] = None) -> Dict[str, LayoutD
             )
             for zone in layout_data.get("zones", [])
         ]
-        layout = LayoutDef(id=layout_data["id"], zones=zones)
+        # Parse caption zone if present
+        caption_zone = None
+        if layout_data.get("captionZone"):
+            cz = layout_data["captionZone"]
+            caption_zone = CaptionZoneDef(
+                position=cz["position"],
+                size=cz["size"]
+            )
+        layout = LayoutDef(
+            id=layout_data["id"],
+            zones=zones,
+            hasCaption=layout_data.get("hasCaption", False),
+            captionZone=caption_zone,
+            captionVariantId=layout_data.get("captionVariantId"),
+        )
         layouts_by_id[layout.id] = layout
-    
+
     return layouts_by_id
 
 def load_remote_image(url: str, timeout: int = 20) -> Image.Image:
@@ -374,8 +397,14 @@ def load_font(family: str, size: int, style: str = "normal", weight: str = "norm
                 stem_normalized = font_file.stem.lower().replace("-", "").replace("_", "")
                 # Check if this font matches the desired suffix
                 if suffix == "":
-                    # Empty suffix matches any font (fallback)
-                    font_attempts.append(str(font_file))
+                    # Empty suffix fallback — prefer -Regular over unsuffixed to avoid
+                    # accidentally picking up Bold/ExtraBold variants
+                    regular_match = next(
+                        (f for f in matching_fonts if "regular" in f.stem.lower().replace("-", "").replace("_", "")),
+                        None
+                    )
+                    chosen = regular_match or font_file
+                    font_attempts.append(str(chosen))
                     matched_suffix = suffix
                     break
                 elif suffix in stem_normalized:
@@ -385,9 +414,13 @@ def load_font(family: str, size: int, style: str = "normal", weight: str = "norm
             if font_attempts:
                 break
 
-        # If no match found but we have matching fonts, use the first one
+        # If no match found but we have matching fonts, prefer -Regular
         if not font_attempts and matching_fonts:
-            font_attempts.append(str(matching_fonts[0]))
+            regular_match = next(
+                (f for f in matching_fonts if "regular" in f.stem.lower().replace("-", "").replace("_", "")),
+                None
+            )
+            font_attempts.append(str(regular_match or matching_fonts[0]))
             matched_suffix = ""
 
     # Check if bold was requested but we fell back to non-bold
@@ -417,7 +450,9 @@ def load_font(family: str, size: int, style: str = "normal", weight: str = "norm
     # Try each font path
     for font_path in font_attempts:
         try:
-            return (ImageFont.truetype(font_path, size), bold_requested_but_not_found)
+            loaded_font = ImageFont.truetype(font_path, size)
+            print(f"[DEBUG] Loaded font: {font_path} (requested: family='{family}', weight='{weight}', simulate_bold={bold_requested_but_not_found})")
+            return (loaded_font, bold_requested_but_not_found)
         except (OSError, IOError):
             continue
 
@@ -463,7 +498,7 @@ def draw_text(
 ):
     """Draw text element on the image."""
     content = text_elem.get("content", "")
-    if not content:
+    if not content or content.strip() == "Enter Text":
         return
 
     y = override_y if override_y is not None else pct_y(page_h, text_elem.get("position", {}).get("y", 0))
@@ -509,13 +544,14 @@ def draw_text(
             # Fallback for older PIL versions
             text_width = font.getsize(content)[0] if hasattr(font, 'getsize') else len(content) * font_px * 0.6
 
-    # Safe area is 10% from left and right edges
-    safe_left = page_w * 0.10
-    safe_right = page_w * 0.90
-    safe_area_width = safe_right - safe_left  # 80% of page width
+    # Text container matches UI: left: 15%, width: 70% (text-align: center within that)
+    safe_left = page_w * 0.15
+    safe_right = page_w * 0.85
+    safe_area_width = safe_right - safe_left  # 70% of page width
 
-    # Calculate intended X position first (before any scaling)
-    centered_x = (page_w - text_width) / 2
+    # Center text within the 70% container (matching UI text-align: center)
+    container_center = (safe_left + safe_right) / 2
+    centered_x = container_center - text_width / 2
     intended_x = override_x if override_x is not None else centered_x
 
     # Calculate where text would end up
@@ -561,6 +597,22 @@ def draw_text(
 
     # Calculate final X position
     x = override_x if override_x is not None else centered_x
+
+    # Vertically center text at the Y position (matches UI translateY(-50%))
+    # textbbox returns (left, top, right, bottom) — top can be > 0 due to font ascent padding
+    # We need to center the actual ink area, not just subtract half the height
+    try:
+        text_bbox = draw.textbbox((0, 0), content, font=font, stroke_width=stroke_width)
+        ink_top = text_bbox[1]      # offset from origin to first ink pixel
+        ink_bottom = text_bbox[3]   # offset from origin to last ink pixel
+        ink_height = ink_bottom - ink_top
+        # Visual center: y should place the ink center at the target Y
+        # draw.text places text at origin, ink starts at origin + ink_top
+        # We want: y + ink_top + ink_height/2 = target_y
+        # So: y = target_y - ink_top - ink_height/2
+        y = y - ink_top - ink_height / 2
+    except:
+        y = y - font_px / 2
 
     print(f"[DEBUG] Drawing text at ({x:.0f}, {y:.0f}), width: {text_width:.0f}px")
 
@@ -1021,6 +1073,166 @@ async def render_page(
         for text_elem in page.textElements:
             draw_text(draw, text_elem, page_width, page_height)
 
+    # 3.5) Caption rendering
+    layout = layouts_by_id.get(page.layoutId) if page.layoutId else None
+    # Resolve caption data — support both new nested format and old flat fields
+    caption_data = page.caption
+    if not caption_data:
+        # Backward compat: check old flat fields on raw page dict
+        raw = page.__dict__ if hasattr(page, '__dict__') else {}
+        if raw.get("captionEnabled"):
+            caption_data = {
+                "enabled": True,
+                "text": raw.get("captionText", ""),
+                "fontFamily": raw.get("captionFontFamily"),
+            }
+    if (caption_data and caption_data.get("text")
+            and caption_data.get("text", "").strip() != "Enter Text"
+            and layout and layout.hasCaption and layout.captionZone):
+        try:
+            cz = layout.captionZone
+            caption_text = caption_data["text"]
+
+            # Caption zone bounds in pixels
+            cx = pct_x(page_width, cz.position["x"])
+            cy = pct_y(page_height, cz.position["y"])
+            cw = pct_x(page_width, cz.size["width"])
+            ch = pct_y(page_height, cz.size["height"])
+
+            # Fill caption zone with page background color
+            bg_color = page.backgroundColor or "#ffffff"
+            caption_bg = Image.new("RGB", (int(cw), int(ch)), color=bg_color)
+            canvas.paste(caption_bg, (int(cx), int(cy)))
+
+            # Resolve fontSize: explicit fontSize > captionSize preset > default 14
+            CAPTION_SIZE_PRESETS = {"S": 14, "L": 24}
+            scale_y = page_height / DESIGN_REF_HEIGHT
+            caption_size = caption_data.get("captionSize", "S")
+            base_font_size = caption_data.get("fontSize") or CAPTION_SIZE_PRESETS.get(caption_size, 14)
+            font_px = int(base_font_size * scale_y)
+            line_height = caption_data.get("lineHeight", 1.2)
+
+            # Resolve font
+            css_font_family = caption_data.get("fontFamily") or "Arial"
+            font_family = resolve_font_family(css_font_family)
+            font_weight = caption_data.get("fontWeight", "normal")
+            text_align = caption_data.get("textAlign", "left")
+            caption_color = caption_data.get("color") or "#333333"
+
+            # Padding inside caption zone — match UI's small padding (approx 1% of zone)
+            padding_x = int(cw * 0.01)
+            padding_y = int(ch * 0.01)
+            available_width = int(cw) - 2 * padding_x
+            available_height = int(ch) - 2 * padding_y
+
+            draw = ImageDraw.Draw(canvas)
+
+            # Helper: wrap text into lines that fit available_width
+            def wrap_text(text, fnt, max_width, sw=0):
+                def measure_width(t):
+                    try:
+                        bbox = draw.textbbox((0, 0), t, font=fnt, stroke_width=sw)
+                        return bbox[2] - bbox[0]
+                    except:
+                        return len(t) * font_px * 0.6
+
+                # Character-level wrap for a single chunk that exceeds max_width
+                def char_wrap(chunk):
+                    chunk_lines = []
+                    buf = ""
+                    for ch in chunk:
+                        test = buf + ch
+                        if measure_width(test) <= max_width:
+                            buf = test
+                        else:
+                            if buf:
+                                chunk_lines.append(buf)
+                            buf = ch
+                    if buf:
+                        chunk_lines.append(buf)
+                    return chunk_lines if chunk_lines else [chunk]
+
+                words = text.split()
+                lines = []
+                current_line = ""
+                for word in words:
+                    # If a single word is wider than max_width, break it by character
+                    if measure_width(word) > max_width:
+                        if current_line:
+                            lines.append(current_line)
+                            current_line = ""
+                        lines.extend(char_wrap(word))
+                        continue
+                    test_line = f"{current_line} {word}".strip() if current_line else word
+                    if measure_width(test_line) <= max_width:
+                        current_line = test_line
+                    else:
+                        if current_line:
+                            lines.append(current_line)
+                        current_line = word
+                if current_line:
+                    lines.append(current_line)
+                return lines if lines else [text]
+
+            # Helper: measure total wrapped text height (matching CSS line-height behavior)
+            def measure_wrapped_height(lines, fnt, lh, sw=0):
+                if not lines:
+                    return 0
+                # CSS line-height: each line occupies font_px * lh
+                return int(len(lines) * font_px * lh)
+
+            # Detect Indic script in caption text
+            caption_indic_font = detect_indic_font(caption_text)
+            if caption_indic_font:
+                print(f"[DEBUG] Indic script detected in caption, using fallback font: {caption_indic_font}")
+
+            # Try current font_px, reduce if text overflows the caption zone
+            min_font_px = max(8, int(8 * scale_y))
+            while font_px >= min_font_px:
+                font, simulate_bold = load_font(font_family, font_px, "normal", font_weight,
+                                                 indic_font_file=caption_indic_font)
+                stroke_width = max(1, font_px // 50) if simulate_bold else 0
+                wrapped_lines = wrap_text(caption_text, font, available_width, stroke_width)
+                total_text_h = measure_wrapped_height(wrapped_lines, font, line_height, stroke_width)
+                if total_text_h <= available_height:
+                    break
+                font_px = int(font_px * 0.9)  # Reduce by 10% and retry
+
+            # Vertically center the wrapped text block
+            start_y = int(cy + (ch - total_text_h) / 2)
+
+            # Draw each line
+            for i, line in enumerate(wrapped_lines):
+                try:
+                    bbox = draw.textbbox((0, 0), line, font=font, stroke_width=stroke_width)
+                    line_w = bbox[2] - bbox[0]
+                    line_h = bbox[3] - bbox[1]
+                    line_top_offset = bbox[1]
+                except:
+                    line_w = len(line) * font_px * 0.6
+                    line_h = font_px
+                    line_top_offset = 0
+
+                # Horizontal position
+                if text_align == "center":
+                    line_x = int(cx + (cw - line_w) / 2)
+                else:
+                    line_x = int(cx) + padding_x
+
+                draw.text(
+                    (line_x, start_y - line_top_offset),
+                    line,
+                    font=font,
+                    fill=caption_color,
+                    stroke_width=stroke_width,
+                    stroke_fill=caption_color if stroke_width > 0 else None,
+                )
+                start_y += int(font_px * line_height)
+
+            print(f"  📝 Caption rendered: '{caption_text}' ({len(wrapped_lines)} lines, font={css_font_family}, size={base_font_size}→{font_px}px, align={text_align}, lineHeight={line_height})")
+        except Exception as e:
+            print(f"  ⚠️ Failed to render caption: {e}")
+
     # 4) Back cover logo (only if no background image on back cover)
     has_back_cover_bg = page.pageType == "cover-back" and (page.backgroundImageUrl or page.backgroundImage or page.backgroundImageId)
     if page.pageType == "cover-back" and page.backCoverLogoUrl and not has_back_cover_bg:
@@ -1139,6 +1351,11 @@ class AlbumRenderer:
                 backgroundImageId=page.get("backgroundImageId"),
                 elements=page.get("elements"),
                 textElements=page.get("textElements"),
+                caption=page.get("caption") or (
+                    {"enabled": True, "text": page.get("captionText", ""),
+                     "fontFamily": page.get("captionFontFamily")}
+                    if page.get("captionEnabled") else None
+                ),
                 backCoverLogoUrl=page.get("backCoverLogoUrl")
             )
             for page in album_data.get("data", {}).get("pages", [])
@@ -1306,6 +1523,11 @@ class AlbumRenderer:
                 backgroundImageId=page.get("backgroundImageId"),
                 elements=page.get("elements"),
                 textElements=page.get("textElements"),
+                caption=page.get("caption") or (
+                    {"enabled": True, "text": page.get("captionText", ""),
+                     "fontFamily": page.get("captionFontFamily")}
+                    if page.get("captionEnabled") else None
+                ),
                 backCoverLogoUrl=page.get("backCoverLogoUrl")
             )
             for page in data.get("pages", [])
