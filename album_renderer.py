@@ -122,6 +122,8 @@ FONT_FAMILY_MAP = {
     "NewYork": "New York",
     '"Poppins"': "Poppins",
     "Poppins": "Poppins",
+    '"IBM Plex Mono"': "IBM Plex Mono",
+    "IBM Plex Mono": "IBM Plex Mono",
     '"Rammetto One"': "Rammetto One",
     "Rammetto One": "Rammetto One",
     "RammettoOne": "Rammetto One",
