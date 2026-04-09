@@ -737,7 +737,7 @@ async def process_order_background(order_id: str, env: Optional[str] = None):
 
             except Exception as item_error:
                 error_msg = str(item_error)
-                # await update_order_item_failed(item_id, error_msg, config)
+                await update_order_item_failed(item_id, error_msg, config)
                 print(f"❌ Order item {item_id} failed: {error_msg}")
 
         print(f"\n🎉 Background processing completed for order: {order_id}")
