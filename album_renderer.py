@@ -1128,10 +1128,14 @@ async def render_page(
             available_height = int(ch) - 2 * padding_y
 
             draw = ImageDraw.Draw(canvas)
+            caption_has_emoji = contains_emoji(caption_text)
+            emoji_scale = 0.85
 
             # Helper: wrap text into lines that fit available_width
             def wrap_text(text, fnt, max_width, sw=0):
                 def measure_width(t):
+                    if caption_has_emoji and contains_emoji(t):
+                        return get_text_width_with_emoji(t, fnt, emoji_scale)
                     try:
                         bbox = draw.textbbox((0, 0), t, font=fnt, stroke_width=sw)
                         return bbox[2] - bbox[0]
@@ -1205,15 +1209,21 @@ async def render_page(
 
             # Draw each line
             for i, line in enumerate(wrapped_lines):
-                try:
-                    bbox = draw.textbbox((0, 0), line, font=font, stroke_width=stroke_width)
-                    line_w = bbox[2] - bbox[0]
-                    line_h = bbox[3] - bbox[1]
-                    line_top_offset = bbox[1]
-                except:
-                    line_w = len(line) * font_px * 0.6
+                line_has_emoji = caption_has_emoji and contains_emoji(line)
+                if line_has_emoji:
+                    line_w = get_text_width_with_emoji(line, font, emoji_scale)
                     line_h = font_px
                     line_top_offset = 0
+                else:
+                    try:
+                        bbox = draw.textbbox((0, 0), line, font=font, stroke_width=stroke_width)
+                        line_w = bbox[2] - bbox[0]
+                        line_h = bbox[3] - bbox[1]
+                        line_top_offset = bbox[1]
+                    except:
+                        line_w = len(line) * font_px * 0.6
+                        line_h = font_px
+                        line_top_offset = 0
 
                 # Horizontal position
                 if text_align == "center":
@@ -1221,14 +1231,24 @@ async def render_page(
                 else:
                     line_x = int(cx) + padding_x
 
-                draw.text(
-                    (line_x, start_y - line_top_offset),
-                    line,
-                    font=font,
-                    fill=caption_color,
-                    stroke_width=stroke_width,
-                    stroke_fill=caption_color if stroke_width > 0 else None,
-                )
+                if line_has_emoji:
+                    draw_text_with_emoji(canvas, (line_x, start_y), line, caption_color, font, emoji_scale)
+                elif stroke_width > 0:
+                    draw.text(
+                        (line_x, start_y - line_top_offset),
+                        line,
+                        font=font,
+                        fill=caption_color,
+                        stroke_width=stroke_width,
+                        stroke_fill=caption_color,
+                    )
+                else:
+                    draw.text(
+                        (line_x, start_y - line_top_offset),
+                        line,
+                        font=font,
+                        fill=caption_color,
+                    )
                 start_y += int(font_px * line_height)
 
             print(f"  📝 Caption rendered: '{caption_text}' ({len(wrapped_lines)} lines, font={css_font_family}, size={base_font_size}→{font_px}px, align={text_align}, lineHeight={line_height})")
