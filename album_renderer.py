@@ -27,7 +27,13 @@ import numpy as np
 from photobook_enhancer import PhotoBookEnhancer
 from enhancement_specs import EnhancementSpec, SpecGenerator
 from image_processor import ImageProcessor
-from emoji_text_renderer import contains_emoji, draw_text_with_emoji, get_text_width_with_emoji
+from emoji_text_renderer import (
+    contains_emoji,
+    draw_text_with_emoji,
+    get_text_width_with_emoji,
+    get_text_width_with_fallback,
+    text_has_unsupported_chars,
+)
 
 # =========================
 # CONSTANTS
@@ -490,6 +496,28 @@ def load_font(family: str, size: int, style: str = "normal", weight: str = "norm
     except:
         return (ImageFont.load_default(), bold_requested_but_not_found)
 
+
+def load_unicode_fallback_font(size: int) -> Optional[ImageFont.FreeTypeFont]:
+    """Load a Unicode-rich fallback font used for glyphs the primary font lacks.
+
+    Arial (bundled) carries common typographic punctuation — bullets, dashes,
+    ellipsis, smart quotes — that several of our decorative fonts (ClassyVogue,
+    ChettaVissto, Skynight) are missing. This font is only used to render the
+    specific characters the primary font can't, so users don't see tofu boxes
+    for things like "Our Life• Our Story".
+    """
+    if not FONTS_DIR.exists():
+        return None
+    for name in ("Arial-Regular.ttf", "DejaVuSans.ttf", "Roboto-Regular.ttf"):
+        path = FONTS_DIR / name
+        if path.exists():
+            try:
+                return ImageFont.truetype(str(path), size)
+            except (OSError, IOError):
+                continue
+    return None
+
+
 def draw_text(
     draw: ImageDraw.ImageDraw,
     text_elem: Dict[str, Any],
@@ -535,9 +563,18 @@ def draw_text(
     has_emoji = contains_emoji(content)
     emoji_scale = 0.85  # Scale emojis slightly smaller than font height to match preview appearance
 
-    if has_emoji:
-        # Use emoji-aware width calculation that accounts for emoji image sizes
-        text_width = get_text_width_with_emoji(content, font, emoji_scale)
+    # Per-character font fallback: if the primary font is missing glyphs for
+    # typographic punctuation (e.g. ClassyVogue has no U+2022 bullet), render
+    # those characters with a Unicode-rich fallback font instead of tofu boxes.
+    needs_fallback = text_has_unsupported_chars(content, font)
+    fallback_font = load_unicode_fallback_font(font_px) if needs_fallback else None
+    if needs_fallback and fallback_font is not None:
+        print(f"[DEBUG] Primary font missing glyphs for some characters in text; using Arial fallback")
+
+    if has_emoji or fallback_font is not None:
+        # Unified measurement path: handles emoji via pilmoji AND font-fallback
+        # runs so centering matches the actual drawn output.
+        text_width = get_text_width_with_fallback(content, font, fallback_font, emoji_scale)
     else:
         try:
             text_bbox = draw.textbbox((0, 0), content, font=font)
@@ -582,9 +619,13 @@ def draw_text(
         font, simulate_bold = load_font(font_family, font_px, font_style, font_weight,
                                          indic_font_file=indic_font_file)
         stroke_width = max(1, font_px // 50) if simulate_bold else 0
+        # Reload the fallback font at the new size so its metrics stay aligned
+        # with the resized primary font.
+        if fallback_font is not None:
+            fallback_font = load_unicode_fallback_font(font_px)
 
-        if has_emoji:
-            text_width = get_text_width_with_emoji(content, font, emoji_scale)
+        if has_emoji or fallback_font is not None:
+            text_width = get_text_width_with_fallback(content, font, fallback_font, emoji_scale)
         else:
             try:
                 text_bbox = draw.textbbox((0, 0), content, font=font)
@@ -620,10 +661,18 @@ def draw_text(
 
     color = text_elem.get("color", "#000000")
 
-    # Draw text (with emoji support if text contains emoji)
-    if has_emoji:
+    # Draw text (with emoji support and per-character font fallback)
+    if has_emoji or fallback_font is not None:
         canvas = draw._image
-        draw_text_with_emoji(canvas, (int(x), int(y)), content, color, font, emoji_scale)
+        draw_text_with_emoji(
+            canvas,
+            (int(x), int(y)),
+            content,
+            color,
+            font,
+            emoji_scale,
+            fallback_font=fallback_font,
+        )
     else:
         # Use stroke to simulate bold if bold font variant wasn't available
         if stroke_width > 0:
@@ -1130,12 +1179,17 @@ async def render_page(
             draw = ImageDraw.Draw(canvas)
             caption_has_emoji = contains_emoji(caption_text)
             emoji_scale = 0.85
+            # Per-character font fallback for captions: render typographic
+            # punctuation missing from decorative fonts (•, —, …, smart quotes,
+            # etc.) with Arial instead of showing tofu boxes.
+            caption_needs_fallback = False  # reset each font-size retry below
+            caption_fallback_font = None
 
             # Helper: wrap text into lines that fit available_width
-            def wrap_text(text, fnt, max_width, sw=0):
+            def wrap_text(text, fnt, max_width, sw=0, fbf=None):
                 def measure_width(t):
-                    if caption_has_emoji and contains_emoji(t):
-                        return get_text_width_with_emoji(t, fnt, emoji_scale)
+                    if (caption_has_emoji and contains_emoji(t)) or fbf is not None:
+                        return get_text_width_with_fallback(t, fnt, fbf, emoji_scale)
                     try:
                         bbox = draw.textbbox((0, 0), t, font=fnt, stroke_width=sw)
                         return bbox[2] - bbox[0]
@@ -1198,7 +1252,13 @@ async def render_page(
                 font, simulate_bold = load_font(font_family, font_px, "normal", font_weight,
                                                  indic_font_file=caption_indic_font)
                 stroke_width = max(1, font_px // 50) if simulate_bold else 0
-                wrapped_lines = wrap_text(caption_text, font, available_width, stroke_width)
+                # Re-evaluate fallback need per iteration because `font` changes size.
+                caption_needs_fallback = text_has_unsupported_chars(caption_text, font)
+                caption_fallback_font = (
+                    load_unicode_fallback_font(font_px) if caption_needs_fallback else None
+                )
+                wrapped_lines = wrap_text(caption_text, font, available_width, stroke_width,
+                                          fbf=caption_fallback_font)
                 total_text_h = measure_wrapped_height(wrapped_lines, font, line_height, stroke_width)
                 if total_text_h <= available_height:
                     break
@@ -1210,8 +1270,17 @@ async def render_page(
             # Draw each line
             for i, line in enumerate(wrapped_lines):
                 line_has_emoji = caption_has_emoji and contains_emoji(line)
-                if line_has_emoji:
-                    line_w = get_text_width_with_emoji(line, font, emoji_scale)
+                line_needs_fallback = (
+                    caption_fallback_font is not None
+                    and text_has_unsupported_chars(line, font)
+                )
+                if line_has_emoji or line_needs_fallback:
+                    line_w = get_text_width_with_fallback(
+                        line,
+                        font,
+                        caption_fallback_font if line_needs_fallback else None,
+                        emoji_scale,
+                    )
                     line_h = font_px
                     line_top_offset = 0
                 else:
@@ -1231,8 +1300,16 @@ async def render_page(
                 else:
                     line_x = int(cx) + padding_x
 
-                if line_has_emoji:
-                    draw_text_with_emoji(canvas, (line_x, start_y), line, caption_color, font, emoji_scale)
+                if line_has_emoji or line_needs_fallback:
+                    draw_text_with_emoji(
+                        canvas,
+                        (line_x, start_y),
+                        line,
+                        caption_color,
+                        font,
+                        emoji_scale,
+                        fallback_font=caption_fallback_font if line_needs_fallback else None,
+                    )
                 elif stroke_width > 0:
                     draw.text(
                         (line_x, start_y - line_top_offset),

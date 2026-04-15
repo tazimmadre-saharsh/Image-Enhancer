@@ -1,8 +1,16 @@
-"""Emoji Text Renderer - Handles text with emoji for print quality output."""
+"""Emoji Text Renderer - Handles text with emoji for print quality output.
+
+Also handles per-character font fallback: when the primary font lacks a glyph
+for a character (e.g. ClassyVogue doesn't have U+2022 bullet), we swap in a
+fallback font (Arial) for just those characters rather than rendering a .notdef
+tofu box. This keeps typographic punctuation like •, —, …, '' "" visible even
+when the user's chosen decorative font doesn't carry those glyphs.
+"""
 
 import re
-from typing import Tuple
-from PIL import Image, ImageFont
+from functools import lru_cache
+from typing import List, Optional, Tuple
+from PIL import Image, ImageDraw, ImageFont
 from pilmoji import Pilmoji
 from pilmoji.source import Twemoji
 import pilmoji.helpers as _pilmoji_helpers
@@ -97,7 +105,8 @@ def draw_text_with_emoji(
     text: str,
     fill: str,
     font: ImageFont.FreeTypeFont,
-    emoji_scale_factor: float = 1.0
+    emoji_scale_factor: float = 1.0,
+    fallback_font: Optional[ImageFont.FreeTypeFont] = None,
 ) -> None:
     """Draw text with color emoji support.
 
@@ -108,14 +117,223 @@ def draw_text_with_emoji(
         fill: Text color (hex string like "#000000")
         font: PIL ImageFont to use for text
         emoji_scale_factor: Scale factor for emoji size (default 1.0)
+        fallback_font: Optional font used for characters the primary font
+            lacks. Required to render typographic punctuation (•, —, …, etc.)
+            when the primary font is a decorative face missing those glyphs.
     """
     oy = _get_emoji_y_offset(font, emoji_scale_factor)
-    with Pilmoji(canvas, source=Twemoji) as pilmoji:
-        pilmoji.text(
-            position,
-            text,
-            fill=hex_to_rgb(fill),
-            font=font,
-            emoji_scale_factor=emoji_scale_factor,
-            emoji_position_offset=(0, oy)
-        )
+    if fallback_font is None:
+        with Pilmoji(canvas, source=Twemoji) as pilmoji:
+            pilmoji.text(
+                position,
+                text,
+                fill=hex_to_rgb(fill),
+                font=font,
+                emoji_scale_factor=emoji_scale_factor,
+                emoji_position_offset=(0, oy)
+            )
+        return
+
+    # Split text into runs using the primary font where possible, fallback
+    # font for characters the primary font doesn't carry a glyph for.
+    runs = _split_text_for_fallback(text, font, fallback_font)
+    fill_rgb = hex_to_rgb(fill)
+    x, y = position
+    draw = ImageDraw.Draw(canvas)
+
+    # Align the fallback font's baseline to the primary font's baseline so
+    # mixed-font lines don't look staggered.
+    primary_ascent, _ = font.getmetrics()
+    fallback_ascent, _ = fallback_font.getmetrics()
+    fallback_y_adjust = primary_ascent - fallback_ascent
+
+    current_x = float(x)
+    for run_text, uses_primary in runs:
+        run_font = font if uses_primary else fallback_font
+        run_y = y if uses_primary else y + fallback_y_adjust
+        if uses_primary and contains_emoji(run_text):
+            with Pilmoji(canvas, source=Twemoji) as pilmoji:
+                pilmoji.text(
+                    (int(current_x), int(run_y)),
+                    run_text,
+                    fill=fill_rgb,
+                    font=run_font,
+                    emoji_scale_factor=emoji_scale_factor,
+                    emoji_position_offset=(0, oy),
+                )
+            run_w, _ = _pilmoji_helpers.getsize(
+                run_text, run_font, emoji_scale_factor=emoji_scale_factor
+            )
+        else:
+            draw.text(
+                (int(current_x), int(run_y)),
+                run_text,
+                fill=fill_rgb,
+                font=run_font,
+            )
+            try:
+                run_w = draw.textlength(run_text, font=run_font)
+            except AttributeError:
+                bbox = draw.textbbox((0, 0), run_text, font=run_font)
+                run_w = bbox[2] - bbox[0]
+        current_x += run_w
+
+
+# =========================
+# FONT FALLBACK SUPPORT
+# =========================
+
+# Characters we should never split a run on — whitespace and invisible control
+# codepoints that every font handles the same way (width-wise they're uniform
+# and they won't render a tofu box).
+_NEVER_FALLBACK_CODEPOINTS = frozenset({
+    0x00A0,  # non-breaking space
+    0x200B, 0x200C, 0x200D,  # ZWSP, ZWNJ, ZWJ
+    0xFE0E, 0xFE0F,          # variation selectors
+})
+
+
+@lru_cache(maxsize=64)
+def _get_font_cmap(font_path: str) -> frozenset:
+    """Return the set of codepoints a font file supports (cached).
+
+    Returns an empty frozenset if the cmap can't be read — callers should
+    treat that as "assume supported" so we don't force fallback on every
+    character.
+    """
+    if not font_path:
+        return frozenset()
+    try:
+        from fontTools.ttLib import TTFont
+        tt = TTFont(font_path, fontNumber=0, lazy=True)
+        codepoints = set()
+        for table in tt["cmap"].tables:
+            codepoints.update(table.cmap.keys())
+        tt.close()
+        return frozenset(codepoints)
+    except Exception:
+        return frozenset()
+
+
+def font_supports_char(font: ImageFont.FreeTypeFont, ch: str) -> bool:
+    """True if the loaded font has a glyph for this character."""
+    path = getattr(font, "path", None)
+    if not path:
+        return True
+    cmap = _get_font_cmap(path)
+    if not cmap:
+        return True  # couldn't inspect — assume supported
+    return ord(ch) in cmap
+
+
+def text_has_unsupported_chars(text: str, font: ImageFont.FreeTypeFont) -> bool:
+    """True if any non-whitespace, non-emoji character is missing from the font."""
+    path = getattr(font, "path", None)
+    if not path:
+        return False
+    cmap = _get_font_cmap(path)
+    if not cmap:
+        return False
+    for ch in text:
+        cp = ord(ch)
+        if ch.isspace() or cp < 0x20 or cp in _NEVER_FALLBACK_CODEPOINTS:
+            continue
+        if EMOJI_PATTERN.match(ch):
+            continue
+        if cp not in cmap:
+            return True
+    return False
+
+
+def _split_text_for_fallback(
+    text: str,
+    primary_font: ImageFont.FreeTypeFont,
+    fallback_font: ImageFont.FreeTypeFont,
+) -> List[Tuple[str, bool]]:
+    """Split text into runs of (run_text, uses_primary_font).
+
+    Characters that exist in the primary font's cmap stay in primary runs.
+    Characters missing from the primary but present in the fallback are
+    split into fallback runs. Emoji, whitespace, and control characters
+    always stay in the primary run so pilmoji can still pick up emoji.
+    """
+    primary_path = getattr(primary_font, "path", None)
+    fallback_path = getattr(fallback_font, "path", None)
+    primary_cmap = _get_font_cmap(primary_path) if primary_path else frozenset()
+    fallback_cmap = _get_font_cmap(fallback_path) if fallback_path else frozenset()
+
+    if not primary_cmap:
+        return [(text, True)]
+
+    runs: List[Tuple[str, bool]] = []
+    buf = ""
+    buf_primary = True
+
+    def flush():
+        nonlocal buf
+        if buf:
+            runs.append((buf, buf_primary))
+            buf = ""
+
+    for ch in text:
+        cp = ord(ch)
+        if (
+            ch.isspace()
+            or cp < 0x20
+            or cp in _NEVER_FALLBACK_CODEPOINTS
+            or EMOJI_PATTERN.match(ch)
+            or cp in primary_cmap
+        ):
+            uses_primary = True
+        elif fallback_cmap and cp not in fallback_cmap:
+            # Neither font has it — stick with primary (will render as tofu,
+            # but so would the fallback).
+            uses_primary = True
+        else:
+            uses_primary = False
+
+        if not buf:
+            buf = ch
+            buf_primary = uses_primary
+        elif uses_primary == buf_primary:
+            buf += ch
+        else:
+            flush()
+            buf = ch
+            buf_primary = uses_primary
+    flush()
+    return runs
+
+
+def get_text_width_with_fallback(
+    text: str,
+    primary_font: ImageFont.FreeTypeFont,
+    fallback_font: Optional[ImageFont.FreeTypeFont],
+    emoji_scale_factor: float = 1.0,
+) -> int:
+    """Measure rendered width of text, accounting for emoji and font fallback.
+
+    Mirrors the layout draw_text_with_emoji uses so centering/wrapping stays
+    consistent with what actually gets drawn.
+    """
+    if fallback_font is None:
+        return get_text_width_with_emoji(text, primary_font, emoji_scale_factor)
+
+    runs = _split_text_for_fallback(text, primary_font, fallback_font)
+    tmp = Image.new("L", (1, 1))
+    draw = ImageDraw.Draw(tmp)
+    total = 0.0
+    for run_text, uses_primary in runs:
+        run_font = primary_font if uses_primary else fallback_font
+        if uses_primary and contains_emoji(run_text):
+            w, _ = _pilmoji_helpers.getsize(
+                run_text, run_font, emoji_scale_factor=emoji_scale_factor
+            )
+            total += w
+        else:
+            try:
+                total += draw.textlength(run_text, font=run_font)
+            except AttributeError:
+                bbox = draw.textbbox((0, 0), run_text, font=run_font)
+                total += bbox[2] - bbox[0]
+    return int(round(total))
